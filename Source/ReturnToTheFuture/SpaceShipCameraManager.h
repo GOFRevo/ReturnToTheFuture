@@ -2,16 +2,26 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Camera/PlayerCameraManager.h"
+#include "BaseCameraManager.h"
 #include "SpaceShipCameraManager.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class RETURNTOTHEFUTURE_API ASpaceShipCameraManager : public APlayerCameraManager
+class RETURNTOTHEFUTURE_API ASpaceShipCameraManager : public ABaseCameraManager
 {
 	GENERATED_BODY()
+private:
+	UPROPERTY()
+	class AMainSpaceShip* MainSpaceShip;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Mesh", Meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* CameraBehavior;
+public:
+	ASpaceShipCameraManager();
+	virtual void OnPosses(APawn* SpaceShip);
+	
+	virtual bool CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo) override;
 	
 };
