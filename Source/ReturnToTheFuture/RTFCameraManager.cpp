@@ -7,7 +7,9 @@
 #include "MainSpaceShip.h"
 
 ARTFCameraManager::ARTFCameraManager():
-	CameraFOV(90.0f)
+	SpaceShipCameraFOV(90.0f),
+	ITCameraFOV(90.0f),
+	IFCameraFOV(90.0f)
 {
 	InstancePointer = this;
 	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Camera Behavior"));
@@ -21,26 +23,48 @@ ARTFCameraManager* ARTFCameraManager::GetInstance()
 
 void ARTFCameraManager::CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
 {
-	const ARTFController* RTFController = ARTFController::GetInstance();
-	switch(RTFController->GetControllerState())
+	switch(ARTFController::GetInstance()->GetControllerState())
 	{
 	case EControllerState::ECS_SpaceShip:
-		ViewInfo.FOV = CameraFOV;
-		ViewInfo.Location = RTFController->GetMainSpaceShip()->GetActorLocation() + FVector{-100.0f, 0.0f, 100.0f};
-		ViewInfo.Rotation = FRotator{-45.0f, 0.0f, 0.0f};
+		SpaceShipCustomCamera(DeltaTime, ViewInfo);
 		break;
 	case EControllerState::ECS_IT:
-		ViewInfo.FOV = CameraFOV;
-		ViewInfo.Location = RTFController->GetMainCharacter()->GetActorLocation() + FVector{-100.0f, 0.0f, 100.0f};
-		ViewInfo.Rotation = FRotator{0.0f, 0.0f, 0.0f};
+		ITCutomCamera(DeltaTime, ViewInfo);
 		break;
 	case EControllerState::ECS_IF:
+		IFCutomCamera(DeltaTime, ViewInfo);
 		break;
 	case EControllerState::ECS_OT:
 		break;
 	default:
 		check(false);
 	}
-	
 }
+
+void ARTFCameraManager::SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
+{
+	const ARTFController* RTFController = ARTFController::GetInstance();
+	ViewInfo.FOV = SpaceShipCameraFOV;
+	ViewInfo.Location = RTFController->GetMainSpaceShip()->GetActorLocation() + FVector{-200.0f, 0.0f, 200.0f};
+	ViewInfo.Rotation = RTFController->GetControlRotation();
+}
+
+void ARTFCameraManager::ITCutomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
+{
+	const ARTFController* RTFController = ARTFController::GetInstance();
+	ViewInfo.FOV = ITCameraFOV;
+	ViewInfo.Location = RTFController->GetMainCharacter()->GetActorLocation() + FVector{-200.0f, 0.0f, 0.0f};
+	ViewInfo.Rotation = RTFController->GetControlRotation();
+}
+
+void ARTFCameraManager::IFCutomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
+{
+	const ARTFController* RTFController = ARTFController::GetInstance();
+	ViewInfo.FOV = IFCameraFOV;
+	ViewInfo.Location = RTFController->GetMainCharacter()->GetActorLocation();
+	ViewInfo.Rotation = RTFController->GetControlRotation();
+}
+
+
+
 
