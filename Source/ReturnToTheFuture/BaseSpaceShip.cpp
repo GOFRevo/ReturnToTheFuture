@@ -2,6 +2,7 @@
 
 
 #include "BaseSpaceShip.h"
+#include "RTFUtility.h"
 
 // Sets default values
 ABaseSpaceShip::ABaseSpaceShip():
@@ -79,9 +80,10 @@ void ABaseSpaceShip::MoveForward(float DeltaTime)
 void ABaseSpaceShip::MoveBack(float DeltaTime)
 {
 	const float CurrentForwardSpeed = SpaceShipVelocity.X;
-	if(CurrentForwardSpeed < 0.0f) return;
+	if(FMath::Abs(CurrentForwardSpeed) < 10e-6) return;
 	SpaceShipVelocity.X = CurrentForwardSpeed -
 		BackForceCurve->GetFloatValue(BackTime) * DeltaTime / Quality;
+	SpaceShipVelocity.X = FMath::Max(0.0f, SpaceShipVelocity.X);
 }
 
 // Called when the game starts or when spawned
