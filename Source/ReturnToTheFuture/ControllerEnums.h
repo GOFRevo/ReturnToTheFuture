@@ -12,12 +12,3 @@ enum class EControllerState: uint8
 
 	EMG_MAX UMETA(DisplayName = "DefaultMax")
 };
-
-UENUM(BlueprintType)
-enum class EMainCharacterState: uint8
-{
-	EMCS_OnSpaceShip UMETA(DisplayName = "OnSpaceShip"),
-	EMCS_OnSpaceStation UMETA(DisplayName = "OnSpaceStation"),
-
-	EMCS_MAX UMETA(DisplayName = "DefaultMax")
-};

@@ -27,6 +27,12 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> InputMappingContext;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_WAxis;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_DAxis;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_ShiftPressed;
@@ -55,6 +61,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_LookUp;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_EPressed;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipLookUpRate;
 
@@ -73,11 +82,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	float IFTurnRate;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|OT", Meta = (AllowPrivateAccess = "true"))
+	float OTLookUpRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|OT", Meta = (AllowPrivateAccess = "true"))
+	float OTTurnRate;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
 	EControllerState ControllerState;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
-	EMainCharacterState MainCharacterState;
 public:
 	ARTFController();
 
@@ -97,12 +109,11 @@ public:
 	EControllerState GetControllerState() const;
 	UFUNCTION(BlueprintCallable)
 	void SetControllerState(EControllerState NewState);
-	
-	UFUNCTION(BlueprintCallable)
-	EMainCharacterState GetMainCharacterState() const;
-	UFUNCTION(BlueprintCallable)
-	void SetMainCharacterState (EMainCharacterState NewState);
 
+	UFUNCTION()
+	void OnWAxis(const FInputActionValue& InputActionValue);
+	UFUNCTION()
+	void OnDAxis(const FInputActionValue& InputActionValue);
 	UFUNCTION()
 	void OnShiftPressed();
 	UFUNCTION()
@@ -117,15 +128,17 @@ public:
 	void OnTwoPressed();
 	UFUNCTION()
 	void OnThreePressed();
-
-	void ToSpaceShipView();
-	void ToITView();
-	void ToIFView();
-
 	UFUNCTION()
 	void OnTurn(const FInputActionValue& InputActionValue);
 	UFUNCTION()
 	void OnLookUp(const FInputActionValue& InputActionValue);
+	UFUNCTION()
+	void OnEPressed();
+
+	void ToSpaceShipView();
+	void ToITView();
+	void ToIFView();
+	void ToOTView();
 
 	void SpaceShipOnTurn(const float InputScale);
 	void SpaceShipOnLookUp(const float InputScale);
@@ -133,7 +146,12 @@ public:
 	void ITOnLookUp(const float InputScale);
 	void IFOnTurn(const float InputScale);
 	void IFOnLookUp(const float InputScale);
-	
-	bool IsCharacterOnSpaceShip() const;
-	bool CanChangeView(EControllerState NewState);
+	void OTOnTurn(const float InputScale);
+	void OTOnLookUp(const float InputScale);
+
+	bool CanSpaceShipInputMove() const;
+	bool CanCharacterInputMove() const;
+	bool CanChangeView(EControllerState NewState) const;
+	bool CanGetOffSpaceShip() const;
+	bool CanGetOnSpaceShip() const;
 };

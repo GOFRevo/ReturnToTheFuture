@@ -32,6 +32,3 @@ void AMainSpaceShip::InitMainSpaceShipInfo()
 	MainCharacter = GetMainCharacter();
 }
 
-
-
-

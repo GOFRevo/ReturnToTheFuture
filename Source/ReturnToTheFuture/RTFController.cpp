@@ -12,6 +12,8 @@ ARTFController::ARTFController():
 	MainSpaceShip(nullptr),
 	MainCharacter(nullptr),
 	InputMappingContext(nullptr),
+	IA_WAxis(nullptr),
+	IA_DAxis(nullptr),
 	IA_ShiftPressed(nullptr),
 	IA_ShiftReleased(nullptr),
 	IA_SpacePressed(nullptr),
@@ -21,14 +23,16 @@ ARTFController::ARTFController():
 	IA_ThreePressed(nullptr),
 	IA_Turn(nullptr),
 	IA_LookUp(nullptr),
+	IA_EPressed(nullptr),
 	SpaceShipLookUpRate(1.25f),
 	SpaceShipTurnRate(1.25f),
 	ITLookUpRate(1.25f),
 	ITTurnRate(1.25f),
 	IFLookUpRate(1.25f),
 	IFTurnRate(1.25f),
-	ControllerState(EControllerState::ECS_IT),
-	MainCharacterState(EMainCharacterState::EMCS_OnSpaceShip)
+	OTLookUpRate(1.25f),
+	OTTurnRate(1.25f),
+	ControllerState(EControllerState::ECS_IT)
 {
 	InstancePointer = this;
 }
@@ -49,6 +53,16 @@ void ARTFController::SetupInputComponent()
 	
 	if(UEnhancedInputComponent* enhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
+		if(IA_WAxis)
+		{
+			enhancedInputComponent->BindAction(IA_WAxis, ETriggerEvent::Triggered, this, &ARTFController::OnWAxis);
+		}
+		
+		if(IA_DAxis)
+		{
+			enhancedInputComponent->BindAction(IA_DAxis, ETriggerEvent::Triggered, this, &ARTFController::OnDAxis);
+		}
+		
 		if(IA_ShiftPressed)
 		{
 			enhancedInputComponent->BindAction(IA_ShiftPressed, ETriggerEvent::Triggered, this, &ARTFController::OnShiftPressed);
@@ -93,6 +107,11 @@ void ARTFController::SetupInputComponent()
 		{
 			enhancedInputComponent->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ARTFController::OnLookUp);
 		}
+
+		if(IA_EPressed)
+		{
+			enhancedInputComponent->BindAction(IA_EPressed, ETriggerEvent::Triggered, this, &ARTFController::OnEPressed);
+		}
 	}
 }
 
@@ -115,16 +134,6 @@ void ARTFController::SetControllerState(EControllerState NewState)
 	ControllerState = NewState;
 }
 
-EMainCharacterState ARTFController::GetMainCharacterState() const
-{
-	return MainCharacterState;
-}
-
-void ARTFController::SetMainCharacterState(EMainCharacterState NewState)
-{
-	MainCharacterState = NewState;
-}
-
 AMainCharacter* ARTFController::GetMainCharacter() const
 {
 	return MainCharacter;
@@ -135,9 +144,35 @@ AMainSpaceShip* ARTFController::GetMainSpaceShip() const
 	return MainSpaceShip;
 }
 
+void ARTFController::OnWAxis(const FInputActionValue& InputActionValue)
+{
+	if(CanSpaceShipInputMove())
+	{
+		return;
+	}
+	if(CanCharacterInputMove())
+	{
+		MainCharacter->PlayMovementInput(true, InputActionValue.GetMagnitude());
+		return;
+	}
+}
+
+void ARTFController::OnDAxis(const FInputActionValue& InputActionValue)
+{
+	if(CanSpaceShipInputMove())
+	{
+		return;
+	}
+	if(CanCharacterInputMove())
+	{
+		MainCharacter->PlayMovementInput(false, InputActionValue.GetMagnitude());
+		return;
+	}
+}
+
 void ARTFController::OnShiftPressed()
 {
-	if(IsCharacterOnSpaceShip())
+	if(CanSpaceShipInputMove())
 	{
 		MainCharacter->BeginMoveSpaceShipForward(MainSpaceShip);
 	}
@@ -145,7 +180,7 @@ void ARTFController::OnShiftPressed()
 
 void ARTFController::OnShiftReleased()
 {
-	if(IsCharacterOnSpaceShip())
+	if(CanSpaceShipInputMove())
 	{
 		MainCharacter->EndMoveSpaceShipForward(MainSpaceShip);
 	}
@@ -153,15 +188,20 @@ void ARTFController::OnShiftReleased()
 
 void ARTFController::OnSpacePressed()
 {
-	if(IsCharacterOnSpaceShip())
+	if(CanSpaceShipInputMove())
 	{
 		MainCharacter->BeginMoveSpaceShipBack(MainSpaceShip);
+		return;
+	}
+	if(CanCharacterInputMove())
+	{
+		return;
 	}
 }
 
 void ARTFController::OnSpaceReleased()
 {
-	if(IsCharacterOnSpaceShip())
+	if(CanSpaceShipInputMove())
 	{
 		MainCharacter->EndMoveSpaceShipBack(MainSpaceShip);
 	}
@@ -206,6 +246,11 @@ void ARTFController::ToIFView()
 	SetControllerState(EControllerState::ECS_IF);
 }
 
+void ARTFController::ToOTView()
+{
+	SetControllerState(EControllerState::ECS_OT);
+}
+
 void ARTFController::OnTurn(const FInputActionValue& InputActionValue)
 {
 	const float InputScale = InputActionValue.GetMagnitude();
@@ -221,6 +266,7 @@ void ARTFController::OnTurn(const FInputActionValue& InputActionValue)
 		IFOnTurn(InputScale);
 		break;
 	case EControllerState::ECS_OT:
+		OTOnTurn(InputScale);
 		break;
 	default:
 		check(false);
@@ -242,9 +288,26 @@ void ARTFController::OnLookUp(const FInputActionValue& InputActionValue)
 		IFOnLookUp(InputScale);
 		break;
 	case EControllerState::ECS_OT:
+		OTOnLookUp(InputScale);
 		break;
 	default:
 		check(false);
+	}
+}
+
+void ARTFController::OnEPressed()
+{
+	if(CanGetOffSpaceShip())
+	{
+		ToOTView();
+		MainCharacter->GetOffSpaceShip(MainSpaceShip);
+		return;
+	}
+	if(CanGetOnSpaceShip())
+	{
+		MainCharacter->GetOnSpaceShip(MainSpaceShip);
+		ToITView();
+		return;
 	}
 }
 
@@ -278,12 +341,37 @@ void ARTFController::IFOnLookUp(const float InputScale)
 	AddPitchInput(InputScale * IFLookUpRate);
 }
 
-bool ARTFController::IsCharacterOnSpaceShip() const
+void ARTFController::OTOnTurn(const float InputScale)
 {
-	return GetMainCharacterState() == EMainCharacterState::EMCS_OnSpaceShip;
+	AddYawInput(InputScale * OTTurnRate);
 }
 
-bool ARTFController::CanChangeView(EControllerState NewState)
+void ARTFController::OTOnLookUp(const float InputScale)
 {
-	return IsCharacterOnSpaceShip() && GetControllerState() != NewState;
+	AddPitchInput(InputScale * OTLookUpRate);
+}
+
+bool ARTFController::CanCharacterInputMove() const
+{
+	return !MainCharacter->IsOnSpaceShip();
+}
+
+bool ARTFController::CanSpaceShipInputMove() const
+{
+	return MainCharacter->IsOnSpaceShip();
+}
+
+bool ARTFController::CanChangeView(EControllerState NewState) const
+{
+	return MainCharacter->IsOnSpaceShip() && GetControllerState() != NewState;
+}
+
+bool ARTFController::CanGetOffSpaceShip() const
+{
+	return MainCharacter->IsOnSpaceShip();
+}
+
+bool ARTFController::CanGetOnSpaceShip() const
+{
+	return !MainCharacter->IsOnSpaceShip();
 }

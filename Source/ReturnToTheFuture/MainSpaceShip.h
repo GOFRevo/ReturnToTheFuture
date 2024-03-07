@@ -20,8 +20,10 @@ public:
 	AMainSpaceShip();
 
 	virtual void Tick(float DeltaSeconds) override;
+	
 	UFUNCTION(BlueprintCallable)
 	AMainCharacter* GetMainCharacter() const;
+	
 	virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 	void InitMainSpaceShipInfo();
 };

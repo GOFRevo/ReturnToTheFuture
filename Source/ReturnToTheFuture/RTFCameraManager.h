@@ -27,6 +27,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	float IFCameraFOV;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|OT", Meta = (AllowPrivateAccess = "true"))
+	float OTCameraFOV;
 
 	ARTFCameraManager();
 
@@ -34,6 +37,7 @@ public:
 	static ARTFCameraManager* GetInstance();
 
 	void SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
-	void ITCutomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
-	void IFCutomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
+	void ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
+	void IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
+	void OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 };
