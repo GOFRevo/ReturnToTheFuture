@@ -29,25 +29,25 @@ private:
 	TObjectPtr<UInputMappingContext> InputMappingContext;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveForwardPressed;
+	TObjectPtr<UInputAction> IA_ShiftPressed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveBackPressed;
+	TObjectPtr<UInputAction> IA_ShiftReleased;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveForwardReleased;
+	TObjectPtr<UInputAction> IA_SpacePressed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveBackReleased;
+	TObjectPtr<UInputAction> IA_SpaceReleased;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_SpaceShipView;
+	TObjectPtr<UInputAction> IA_OnePressed;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_ITView;
+	TObjectPtr<UInputAction> IA_TwoPressed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_IFView;
+	TObjectPtr<UInputAction> IA_ThreePressed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_Turn;
@@ -73,8 +73,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	float IFTurnRate;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller Info", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
 	EControllerState ControllerState;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
+	EMainCharacterState MainCharacterState;
 public:
 	ARTFController();
 
@@ -84,23 +87,36 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void InitControllerInfo(APawn* SpaceShip);
-	UFUNCTION(BlueprintCallable)
-	EControllerState GetControllerState() const;
-	UFUNCTION(BlueprintCallable)
-	void SetControllerState(EControllerState NewState);
+	
 	UFUNCTION(BlueprintCallable)
 	AMainCharacter* GetMainCharacter() const;
 	UFUNCTION(BlueprintCallable)
 	AMainSpaceShip* GetMainSpaceShip() const;
+	
+	UFUNCTION(BlueprintCallable)
+	EControllerState GetControllerState() const;
+	UFUNCTION(BlueprintCallable)
+	void SetControllerState(EControllerState NewState);
+	
+	UFUNCTION(BlueprintCallable)
+	EMainCharacterState GetMainCharacterState() const;
+	UFUNCTION(BlueprintCallable)
+	void SetMainCharacterState (EMainCharacterState NewState);
 
 	UFUNCTION()
-	void OnBeginMoveForward(const FInputActionValue& InputActionValue);
+	void OnShiftPressed();
 	UFUNCTION()
-	void OnEndMoveForward(const FInputActionValue& InputActionValue);
+	void OnShiftReleased();
 	UFUNCTION()
-	void OnBeginMoveBack(const FInputActionValue& InputActionValue);
+	void OnSpacePressed();
 	UFUNCTION()
-	void OnEndMoveBack(const FInputActionValue& InputActionValue);
+	void OnSpaceReleased();
+	UFUNCTION()
+	void OnOnePressed();
+	UFUNCTION()
+	void OnTwoPressed();
+	UFUNCTION()
+	void OnThreePressed();
 
 	void ToSpaceShipView();
 	void ToITView();
@@ -111,12 +127,13 @@ public:
 	UFUNCTION()
 	void OnLookUp(const FInputActionValue& InputActionValue);
 
-	bool IsCharacterOnSpaceShip() const;
-
 	void SpaceShipOnTurn(const float InputScale);
 	void SpaceShipOnLookUp(const float InputScale);
 	void ITOnTurn(const float InputScale);
 	void ITOnLookUp(const float InputScale);
 	void IFOnTurn(const float InputScale);
 	void IFOnLookUp(const float InputScale);
+	
+	bool IsCharacterOnSpaceShip() const;
+	bool CanChangeView(EControllerState NewState);
 };
