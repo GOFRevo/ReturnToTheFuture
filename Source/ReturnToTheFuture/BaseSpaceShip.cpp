@@ -2,7 +2,6 @@
 
 
 #include "BaseSpaceShip.h"
-#include "BaseCameraManager.h"
 
 // Sets default values
 ABaseSpaceShip::ABaseSpaceShip():
@@ -27,37 +26,8 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SetRootComponent(Mesh);
 }
 
-void ABaseSpaceShip::MoveForward(float DeltaTime)
+void ABaseSpaceShip::UpdateMove(float DeltaTime)
 {
-	const float CurrentForwardSpeed = SpaceShipVelocity.X;
-	if(CurrentForwardSpeed > MaxForwardSpeed)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%f"), ForwardTime);
-		return;
-	}
-	SpaceShipVelocity.X = CurrentForwardSpeed +
-		ForwardForceCurve->GetFloatValue(ForwardTime) * DeltaTime / Quality;
-}
-
-void ABaseSpaceShip::MoveBack(float DeltaTime)
-{
-	const float CurrentForwardSpeed = SpaceShipVelocity.X;
-	if(CurrentForwardSpeed < 0.0f) return;
-	SpaceShipVelocity.X = CurrentForwardSpeed -
-		BackForceCurve->GetFloatValue(BackTime) * DeltaTime / Quality;
-}
-
-// Called when the game starts or when spawned
-void ABaseSpaceShip::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void ABaseSpaceShip::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 	if(bBack)
 	{
 		bForward = false;
@@ -93,21 +63,46 @@ void ABaseSpaceShip::Tick(float DeltaTime)
 	SetActorLocation(CurrentActorLocation + SpaceShipVelocity * DeltaTime);
 }
 
+
+void ABaseSpaceShip::MoveForward(float DeltaTime)
+{
+	const float CurrentForwardSpeed = SpaceShipVelocity.X;
+	if(CurrentForwardSpeed > MaxForwardSpeed)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%f"), ForwardTime);
+		return;
+	}
+	SpaceShipVelocity.X = CurrentForwardSpeed +
+		ForwardForceCurve->GetFloatValue(ForwardTime) * DeltaTime / Quality;
+}
+
+void ABaseSpaceShip::MoveBack(float DeltaTime)
+{
+	const float CurrentForwardSpeed = SpaceShipVelocity.X;
+	if(CurrentForwardSpeed < 0.0f) return;
+	SpaceShipVelocity.X = CurrentForwardSpeed -
+		BackForceCurve->GetFloatValue(BackTime) * DeltaTime / Quality;
+}
+
+// Called when the game starts or when spawned
+void ABaseSpaceShip::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void ABaseSpaceShip::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	UpdateMove(DeltaTime);
+}
+
 // Called to bind functionality to input
 void ABaseSpaceShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-}
-
-void ABaseSpaceShip::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
-{
-	const APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
-	ABaseCameraManager* BaseCameraManager = CastChecked<ABaseCameraManager>(PlayerController->PlayerCameraManager);
-	if(!BaseCameraManager->CustomCamera(DeltaTime, OutResult))
-	{
-		Super::CalcCamera(DeltaTime, OutResult);
-	}
 }
 
 void ABaseSpaceShip::BeginMoveForward()
