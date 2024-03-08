@@ -135,10 +135,10 @@ public:
 	UFUNCTION()
 	void OnEPressed();
 
-	void ToSpaceShipView();
-	void ToITView();
-	void ToIFView();
-	void ToOTView();
+	void ToSpaceShipControl();
+	void ToITControl();
+	void ToIFControl();
+	void ToOTControl();
 
 	void SpaceShipOnTurn(const float InputScale);
 	void SpaceShipOnLookUp(const float InputScale);
@@ -151,7 +151,7 @@ public:
 
 	bool CanSpaceShipInputMove() const;
 	bool CanCharacterInputMove() const;
-	bool CanChangeView(EControllerState NewState) const;
+	bool CanChangeControlState(EControllerState NewState) const;
 	bool CanGetOffSpaceShip() const;
 	bool CanGetOnSpaceShip() const;
 };

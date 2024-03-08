@@ -9,6 +9,7 @@ enum class EControllerState: uint8
 	ECS_IT UMETA(DisplayName = "IT"),
 	ECS_IF UMETA(DisplayName = "IF"),
 	ECS_OT UMETA(DisplayName = "OT"),
+	ECS_Idle UMETA(DisplayName = "Idle"),
 
-	EMG_MAX UMETA(DisplayName = "DefaultMax")
+	ECS_MAX UMETA(DisplayName = "DefaultMax")
 };

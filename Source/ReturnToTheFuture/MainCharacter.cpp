@@ -8,7 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 AMainCharacter::AMainCharacter():
-	CharacterMainState(ECharacterMainState::ECMS_OnSpaceShip)
+	CharacterMainState(ECharacterMainState::ECMS_OnSpaceShip),
+	ITCameraFOV(90.0f),
+	IFCameraFOV(90.0f),
+	OTCameraFOV(90.0f)
 {
 }
 

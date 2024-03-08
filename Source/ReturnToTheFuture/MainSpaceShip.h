@@ -17,6 +17,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpaceShip Info", Meta = (AllowPrivateAccess = "true"))
 	class AMainCharacter* MainCharacter;
 public:
+	float SpaceShipCameraFOV;
+	
 	AMainSpaceShip();
 
 	virtual void Tick(float DeltaSeconds) override;

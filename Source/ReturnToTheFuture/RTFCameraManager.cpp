@@ -5,12 +5,14 @@
 #include "RTFController.h"
 #include "MainCharacter.h"
 #include "MainSpaceShip.h"
+#include "RTFCameraAnimInstance.h"
 
 ARTFCameraManager::ARTFCameraManager():
-	SpaceShipCameraFOV(90.0f),
-	ITCameraFOV(90.0f),
-	IFCameraFOV(90.0f),
-	OTCameraFOV(90.0f)
+	CameraViewState(ECameraViewState::ECVS_ITView),
+	RTFCameraAnimInstance(nullptr),
+	TargetCameraRotation(0.0f),
+	TargetCameraLocation(0.0f),
+	PivotLocation(0.0f)
 {
 	InstancePointer = this;
 	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Camera Behavior"));
@@ -22,20 +24,36 @@ ARTFCameraManager* ARTFCameraManager::GetInstance()
 	return InstancePointer;
 }
 
+void ARTFCameraManager::BeginPlay()
+{
+	Super::BeginPlay();
+	RTFCameraAnimInstance = CastChecked<URTFCameraAnimInstance>(CameraBehavior->GetAnimInstance());
+}
+
+ECameraViewState ARTFCameraManager::GetCameraViewState() const
+{
+	return CameraViewState;
+}
+
+void ARTFCameraManager::SetCameraViewState(ECameraViewState NewViewState)
+{
+	CameraViewState = NewViewState;
+}
+
 void ARTFCameraManager::CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
 {
-	switch(ARTFController::GetInstance()->GetControllerState())
+	switch(GetCameraViewState())
 	{
-	case EControllerState::ECS_SpaceShip:
+	case ECameraViewState::ECVS_SpaceShipView:
 		SpaceShipCustomCamera(DeltaTime, ViewInfo);
 		break;
-	case EControllerState::ECS_IT:
+	case ECameraViewState::ECVS_ITView:
 		ITCustomCamera(DeltaTime, ViewInfo);
 		break;
-	case EControllerState::ECS_IF:
+	case ECameraViewState::ECVS_IFView:
 		IFCustomCamera(DeltaTime, ViewInfo);
 		break;
-	case EControllerState::ECS_OT:
+	case ECameraViewState::ECVS_OTView:
 		OTCustomCamera(DeltaTime, ViewInfo);
 		break;
 	default:
@@ -45,16 +63,19 @@ void ARTFCameraManager::CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo
 
 void ARTFCameraManager::SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
 {
+	RTFCameraAnimInstance->UpdateSpaceShipInfo();
 	const ARTFController* RTFController = ARTFController::GetInstance();
-	ViewInfo.FOV = SpaceShipCameraFOV;
-	ViewInfo.Location = RTFController->GetMainSpaceShip()->GetActorLocation() + FVector{-200.0f, 0.0f, 200.0f};
+	const AMainSpaceShip* MainSpaceShip = RTFController->GetMainSpaceShip();
+	ViewInfo.FOV = MainSpaceShip->SpaceShipCameraFOV;
+	ViewInfo.Location = MainSpaceShip->GetActorLocation() + FVector{-200.0f, 0.0f, 200.0f};
 	ViewInfo.Rotation = RTFController->GetControlRotation();
 }
 
 void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
 {
 	const ARTFController* RTFController = ARTFController::GetInstance();
-	ViewInfo.FOV = ITCameraFOV;
+	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
+	ViewInfo.FOV = MainCharacter->ITCameraFOV;
 	ViewInfo.Location = RTFController->GetMainCharacter()->GetActorLocation() + FVector{-200.0f, 0.0f, 0.0f};
 	ViewInfo.Rotation = RTFController->GetControlRotation();
 }
@@ -62,15 +83,49 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 void ARTFCameraManager::IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
 {
 	const ARTFController* RTFController = ARTFController::GetInstance();
-	ViewInfo.FOV = IFCameraFOV;
-	ViewInfo.Location = RTFController->GetMainCharacter()->GetActorLocation();
+	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
+	ViewInfo.FOV = MainCharacter->IFCameraFOV;
+	ViewInfo.Location = MainCharacter->GetActorLocation();
 	ViewInfo.Rotation = RTFController->GetControlRotation();
 }
 
 void ARTFCameraManager::OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo)
 {
 	const ARTFController* RTFController = ARTFController::GetInstance();
-	ViewInfo.FOV = OTCameraFOV;
-	ViewInfo.Location = RTFController->GetMainCharacter()->GetActorLocation() + FVector{-100.0f, 0.0f, 100.0f};
+	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
+	ViewInfo.FOV = MainCharacter->OTCameraFOV;
+	ViewInfo.Location = MainCharacter->GetActorLocation() + FVector{-100.0f, 0.0f, 100.0f};
 	ViewInfo.Rotation = RTFController->GetControlRotation();
 }
+
+void ARTFCameraManager::ToSpaceShipView()
+{
+	SetCameraViewState(ECameraViewState::ECVS_SpaceShipView);
+}
+
+void ARTFCameraManager::ToITView()
+{
+	SetCameraViewState(ECameraViewState::ECVS_ITView);
+}
+
+void ARTFCameraManager::ToIFView()
+{
+	SetCameraViewState(ECameraViewState::ECVS_IFView);
+}
+
+void ARTFCameraManager::ToOTView()
+{
+	SetCameraViewState(ECameraViewState::ECVS_OTView);
+}
+
+float ARTFCameraManager::GetCameraBehaviorParam(const FName& CurveName) const
+{
+	if(RTFCameraAnimInstance == nullptr) return 0.0f;
+	return RTFCameraAnimInstance->GetCurveValue(CurveName);
+}
+
+bool ARTFCameraManager::CanChangeCameraViewState(ECameraViewState NewState) const
+{
+	return CameraViewState != NewState && CameraViewState != ECameraViewState::ECVS_EmptyView;
+}
+

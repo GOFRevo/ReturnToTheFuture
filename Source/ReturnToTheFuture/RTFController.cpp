@@ -1,11 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "RTFController.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "MainSpaceShip.h"
 #include "MainCharacter.h"
+#include "RTFCameraManager.h"
 #include "Components/CapsuleComponent.h"
 
 ARTFController::ARTFController():
@@ -209,63 +208,84 @@ void ARTFController::OnSpaceReleased()
 
 void ARTFController::OnOnePressed()
 {
-	if(CanChangeView(EControllerState::ECS_SpaceShip))
+	if(CanChangeControlState(EControllerState::ECS_SpaceShip))
 	{
-		ToSpaceShipView();
+		ToSpaceShipControl();
 	}
 }
 
 void ARTFController::OnTwoPressed()
 {
-	if(CanChangeView(EControllerState::ECS_IT))
+	if(CanChangeControlState(EControllerState::ECS_IT))
 	{
-		ToITView();
+		ToITControl();
 	}
 }
 
 void ARTFController::OnThreePressed()
 {
-	if(CanChangeView(EControllerState::ECS_IF))
+	if(CanChangeControlState(EControllerState::ECS_IF))
 	{
-		ToIFView();
+		ToIFControl();
 	}
 }
 
-void ARTFController::ToSpaceShipView()
+void ARTFController::ToSpaceShipControl()
 {
 	SetControllerState(EControllerState::ECS_SpaceShip);
+	ARTFCameraManager* CameraManager = ARTFCameraManager::GetInstance();
+	if(CameraManager->CanChangeCameraViewState(ECameraViewState::ECVS_SpaceShipView))
+	{
+		CameraManager->ToSpaceShipView();
+	}
 }
 
-void ARTFController::ToITView()
+void ARTFController::ToITControl()
 {
 	SetControllerState(EControllerState::ECS_IT);
+	ARTFCameraManager* CameraManager = ARTFCameraManager::GetInstance();
+	if(CameraManager->CanChangeCameraViewState(ECameraViewState::ECVS_ITView))
+	{
+		CameraManager->ToITView();
+	}
 }
 
-void ARTFController::ToIFView()
+void ARTFController::ToIFControl()
 {
 	SetControllerState(EControllerState::ECS_IF);
+	ARTFCameraManager* CameraManager = ARTFCameraManager::GetInstance();
+	if(CameraManager->CanChangeCameraViewState(ECameraViewState::ECVS_IFView))
+	{
+		CameraManager->ToIFView();
+	}
 }
 
-void ARTFController::ToOTView()
+void ARTFController::ToOTControl()
 {
 	SetControllerState(EControllerState::ECS_OT);
+	ARTFCameraManager* CameraManager = ARTFCameraManager::GetInstance();
+	if(CameraManager->CanChangeCameraViewState(ECameraViewState::ECVS_OTView))
+	{
+		CameraManager->ToOTView();
+	}
 }
 
 void ARTFController::OnTurn(const FInputActionValue& InputActionValue)
 {
 	const float InputScale = InputActionValue.GetMagnitude();
-	switch(ControllerState)
+	const ARTFCameraManager* CameraManager = ARTFCameraManager::GetInstance();
+	switch(CameraManager->GetCameraViewState())
 	{
-	case EControllerState::ECS_SpaceShip:
+	case ECameraViewState::ECVS_SpaceShipView:
 		SpaceShipOnTurn(InputScale);
 		break;
-	case EControllerState::ECS_IT:
+	case ECameraViewState::ECVS_ITView:
 		ITOnTurn(InputScale);
 		break;
-	case EControllerState::ECS_IF:
+	case ECameraViewState::ECVS_IFView:
 		IFOnTurn(InputScale);
 		break;
-	case EControllerState::ECS_OT:
+	case ECameraViewState::ECVS_OTView:
 		OTOnTurn(InputScale);
 		break;
 	default:
@@ -276,18 +296,19 @@ void ARTFController::OnTurn(const FInputActionValue& InputActionValue)
 void ARTFController::OnLookUp(const FInputActionValue& InputActionValue)
 {
 	const float InputScale = InputActionValue.GetMagnitude();
-	switch(ControllerState)
+	const ARTFCameraManager* CameraManager = ARTFCameraManager::GetInstance();
+	switch(CameraManager->GetCameraViewState())
 	{
-	case EControllerState::ECS_SpaceShip:
+	case ECameraViewState::ECVS_SpaceShipView:
 		SpaceShipOnLookUp(InputScale);
 		break;
-	case EControllerState::ECS_IT:
+	case ECameraViewState::ECVS_ITView:
 		ITOnLookUp(InputScale);
 		break;
-	case EControllerState::ECS_IF:
+	case ECameraViewState::ECVS_IFView:
 		IFOnLookUp(InputScale);
 		break;
-	case EControllerState::ECS_OT:
+	case ECameraViewState::ECVS_OTView:
 		OTOnLookUp(InputScale);
 		break;
 	default:
@@ -299,14 +320,14 @@ void ARTFController::OnEPressed()
 {
 	if(CanGetOffSpaceShip())
 	{
-		ToOTView();
+		ToOTControl();
 		MainCharacter->GetOffSpaceShip(MainSpaceShip);
 		return;
 	}
 	if(CanGetOnSpaceShip())
 	{
 		MainCharacter->GetOnSpaceShip(MainSpaceShip);
-		ToITView();
+		ToITControl();
 		return;
 	}
 }
@@ -361,9 +382,10 @@ bool ARTFController::CanSpaceShipInputMove() const
 	return MainCharacter->IsOnSpaceShip();
 }
 
-bool ARTFController::CanChangeView(EControllerState NewState) const
+bool ARTFController::CanChangeControlState(EControllerState NewState) const
 {
-	return MainCharacter->IsOnSpaceShip() && GetControllerState() != NewState;
+	return MainCharacter->IsOnSpaceShip() && GetControllerState() != NewState
+		&& GetControllerState() != EControllerState::ECS_Idle;
 }
 
 bool ARTFController::CanGetOffSpaceShip() const

@@ -19,6 +19,10 @@ protected:
 	ECharacterMainState CharacterMainState;
 
 public:
+	float ITCameraFOV;
+	float IFCameraFOV;
+	float OTCameraFOV;
+	
 	AMainCharacter();
 	
 	virtual void BeginPlay() override;

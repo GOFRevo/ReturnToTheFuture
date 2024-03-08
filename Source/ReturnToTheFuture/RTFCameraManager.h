@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CameraEnums.h"
 #include "Camera/PlayerCameraManager.h"
 #include "RTFCameraManager.generated.h"
 
@@ -19,25 +20,47 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Mesh", Meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* CameraBehavior;
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipCameraFOV;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
+	ECameraViewState CameraViewState;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
-	float ITCameraFOV;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
+	class URTFCameraAnimInstance* RTFCameraAnimInstance;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
-	float IFCameraFOV;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|OT", Meta = (AllowPrivateAccess = "true"))
-	float OTCameraFOV;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", meta = (AllowPrivateAccess = "true"))
+	FRotator TargetCameraRotation;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", meta = (AllowPrivateAccess = "true"))
+	FVector TargetCameraLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", meta = (AllowPrivateAccess = "true"))
+	FVector PivotLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", meta = (AllowPrivateAccess = "true"))
+	FTransform SmoothedPivotTarget;
+	
 	ARTFCameraManager();
 
 	void CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 	static ARTFCameraManager* GetInstance();
+	
+	virtual void BeginPlay() override;
+	
+	UFUNCTION(Blueprintable)
+	ECameraViewState GetCameraViewState() const;
+	UFUNCTION(Blueprintable)
+	void SetCameraViewState(ECameraViewState NewViewState);
 
 	void SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 	void ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 	void IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 	void OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
+
+	void ToSpaceShipView();
+	void ToITView();
+	void ToIFView();
+	void ToOTView();
+
+	float GetCameraBehaviorParam(const FName& CurveName) const;
+
+	bool CanChangeCameraViewState(ECameraViewState NewState) const;
 };
