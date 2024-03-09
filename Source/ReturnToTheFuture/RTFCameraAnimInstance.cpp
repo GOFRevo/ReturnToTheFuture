@@ -18,6 +18,11 @@ void URTFCameraAnimInstance::UpdateEssentialInfo()
 void URTFCameraAnimInstance::UpdateSpaceShipInfo()
 {
 	UpdateEssentialInfo();
+	UpdateSpaceShipCachedInfo();
+}
+
+void URTFCameraAnimInstance::UpdateSpaceShipCachedInfo()
+{
 	
 }
 
