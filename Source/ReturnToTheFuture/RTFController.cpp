@@ -411,7 +411,7 @@ void ARTFController::ViewOnLookUp(const float InputScale, const float LookupRate
 		return;
 	}
 	const float YawAngle = MapControlRotation(GetControlRotation().Yaw);
-	const float PitchAngle = MapControlRotation(GetControlRotation().Pitch) + Value;
+	const float PitchAngle = MapControlRotation(GetControlRotation().Pitch) - Value;
 	const float CurValue = YawAngle * YawAngle + PitchAngle * PitchAngle;
 
 	const float Max = MaxAngle * MaxAngle;
