@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CameraEnums.h"
+#include "CameraStruct.h"
 #include "Camera/PlayerCameraManager.h"
 #include "RTFCameraManager.generated.h"
 
@@ -27,23 +28,11 @@ public:
 	class URTFCameraAnimInstance* RTFCameraAnimInstance;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FRotator TargetCameraRotation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FVector TargetCameraLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FVector PivotLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FTransform SmoothedPivotTarget;
+	FCameraMovementInfo TotalCameraMovementInfo;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FRotator SpaceShipTargetCameraRotation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FVector SpaceShipTargetCameraLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FVector SpaceShipPivotLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FTransform SmoothedSpaceShipPivotTarget;
-
+	FCameraMovementInfo SpaceShipCameraMovementInfo;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float RotationLagSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
