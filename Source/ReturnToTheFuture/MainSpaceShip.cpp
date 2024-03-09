@@ -6,7 +6,8 @@
 #include "RTFCameraManager.h"
 
 AMainSpaceShip::AMainSpaceShip():
-	MainCharacter(nullptr)
+	MainCharacter(nullptr),
+	SpaceShipCameraFOV(90.0f)
 {
 }
 
@@ -31,7 +32,4 @@ void AMainSpaceShip::InitMainSpaceShipInfo()
 {
 	MainCharacter = GetMainCharacter();
 }
-
-
-
 

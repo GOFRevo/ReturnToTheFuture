@@ -27,33 +27,42 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> InputMappingContext;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveForwardPressed;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveBackPressed;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveForwardReleased;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_MoveBackReleased;
+	TObjectPtr<UInputAction> IA_WAxis;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_SpaceShipView;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_ITView;
+	TObjectPtr<UInputAction> IA_DAxis;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> IA_IFView;
+	TObjectPtr<UInputAction> IA_ShiftPressed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_ShiftReleased;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_SpacePressed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_SpaceReleased;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_OnePressed;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_TwoPressed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_ThreePressed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_Turn;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_LookUp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_EPressed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipLookUpRate;
@@ -73,7 +82,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	float IFTurnRate;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller Info", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|OT", Meta = (AllowPrivateAccess = "true"))
+	float OTLookUpRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|OT", Meta = (AllowPrivateAccess = "true"))
+	float OTTurnRate;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
 	EControllerState ControllerState;
 public:
 	ARTFController();
@@ -84,34 +99,46 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void InitControllerInfo(APawn* SpaceShip);
-	UFUNCTION(BlueprintCallable)
-	EControllerState GetControllerState() const;
-	UFUNCTION(BlueprintCallable)
-	void SetControllerState(EControllerState NewState);
+	
 	UFUNCTION(BlueprintCallable)
 	AMainCharacter* GetMainCharacter() const;
 	UFUNCTION(BlueprintCallable)
 	AMainSpaceShip* GetMainSpaceShip() const;
+	
+	UFUNCTION(BlueprintCallable)
+	EControllerState GetControllerState() const;
+	UFUNCTION(BlueprintCallable)
+	void SetControllerState(EControllerState NewState);
 
 	UFUNCTION()
-	void OnBeginMoveForward(const FInputActionValue& InputActionValue);
+	void OnWAxis(const FInputActionValue& InputActionValue);
 	UFUNCTION()
-	void OnEndMoveForward(const FInputActionValue& InputActionValue);
+	void OnDAxis(const FInputActionValue& InputActionValue);
 	UFUNCTION()
-	void OnBeginMoveBack(const FInputActionValue& InputActionValue);
+	void OnShiftPressed();
 	UFUNCTION()
-	void OnEndMoveBack(const FInputActionValue& InputActionValue);
-
-	void ToSpaceShipView();
-	void ToITView();
-	void ToIFView();
-
+	void OnShiftReleased();
+	UFUNCTION()
+	void OnSpacePressed();
+	UFUNCTION()
+	void OnSpaceReleased();
+	UFUNCTION()
+	void OnOnePressed();
+	UFUNCTION()
+	void OnTwoPressed();
+	UFUNCTION()
+	void OnThreePressed();
 	UFUNCTION()
 	void OnTurn(const FInputActionValue& InputActionValue);
 	UFUNCTION()
 	void OnLookUp(const FInputActionValue& InputActionValue);
+	UFUNCTION()
+	void OnEPressed();
 
-	bool IsCharacterOnSpaceShip() const;
+	void ToSpaceShipControl();
+	void ToITControl();
+	void ToIFControl();
+	void ToOTControl();
 
 	void SpaceShipOnTurn(const float InputScale);
 	void SpaceShipOnLookUp(const float InputScale);
@@ -119,4 +146,12 @@ public:
 	void ITOnLookUp(const float InputScale);
 	void IFOnTurn(const float InputScale);
 	void IFOnLookUp(const float InputScale);
+	void OTOnTurn(const float InputScale);
+	void OTOnLookUp(const float InputScale);
+
+	bool CanSpaceShipInputMove() const;
+	bool CanCharacterInputMove() const;
+	bool CanChangeControlState(EControllerState NewState) const;
+	bool CanGetOffSpaceShip() const;
+	bool CanGetOnSpaceShip() const;
 };

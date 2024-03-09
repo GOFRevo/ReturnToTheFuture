@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseCharacter.h"
+#include "MainCharacterEnums.h"
 #include "MainCharacter.generated.h"
 
 /**
@@ -14,13 +15,32 @@ UCLASS()
 class RETURNTOTHEFUTURE_API AMainCharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
+protected:
+	ECharacterMainState CharacterMainState;
 
 public:
+	float ITCameraFOV;
+	float IFCameraFOV;
+	float OTCameraFOV;
+	
 	AMainCharacter();
+	
+	virtual void BeginPlay() override;
+	
+	UFUNCTION(BlueprintCallable)
+	ECharacterMainState GetCharacterMainState() const;
+	UFUNCTION(BlueprintCallable)
+	void SetCharacterMainState(ECharacterMainState NewState);
+	
 	virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 	void BeginMoveSpaceShipForward(AMainSpaceShip* SpaceShip);
 	void EndMoveSpaceShipForward(AMainSpaceShip* SpaceShip);
 	void BeginMoveSpaceShipBack(AMainSpaceShip* SpaceShip);
 	void EndMoveSpaceShipBack(AMainSpaceShip* SpaceShip);
-	
+	void GetOffSpaceShip(AMainSpaceShip* SpaceShip);
+	void GetOnSpaceShip(AMainSpaceShip* SpaceShip);
+	void AttachToSpaceShip(AMainSpaceShip* SpaceShip);
+	void DetachFromSpaceShip(AMainSpaceShip* SpaceShip);
+
+	bool IsOnSpaceShip() const;
 };

@@ -4,10 +4,31 @@
 #include "MainCharacter.h"
 #include "RTFCameraManager.h"
 #include "MainSpaceShip.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
-AMainCharacter::AMainCharacter()
+AMainCharacter::AMainCharacter():
+	CharacterMainState(ECharacterMainState::ECMS_OnSpaceShip),
+	ITCameraFOV(90.0f),
+	IFCameraFOV(90.0f),
+	OTCameraFOV(90.0f)
 {
-	
+}
+
+void AMainCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	GetCharacterMovement()->GravityScale = 0.0f;
+}
+
+ECharacterMainState AMainCharacter::GetCharacterMainState() const
+{
+	return CharacterMainState;
+}
+
+void AMainCharacter::SetCharacterMainState(ECharacterMainState NewState)
+{
+	CharacterMainState = NewState;
 }
 
 void AMainCharacter::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
@@ -33,4 +54,39 @@ void AMainCharacter::BeginMoveSpaceShipBack(AMainSpaceShip* SpaceShip)
 void AMainCharacter::EndMoveSpaceShipBack(AMainSpaceShip* SpaceShip)
 {
 	SpaceShip->EndMoveBack();
+}
+
+void AMainCharacter::GetOffSpaceShip(AMainSpaceShip* SpaceShip)
+{
+	DetachFromSpaceShip(SpaceShip);
+	SetActorLocation(SpaceShip->GetActorLocation() + FVector{0.0f, 140.0f, 20.0f});
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"), true);
+	GetCharacterMovement()->GravityScale = 1.0f;
+	SetCharacterMainState(ECharacterMainState::ECMS_OnSpaceStation);
+}
+
+void AMainCharacter::GetOnSpaceShip(AMainSpaceShip* SpaceShip)
+{
+	GetCharacterMovement()->GravityScale = 0.0f;
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"), true);
+	SetActorLocation(SpaceShip->GetActorLocation() + FVector{100.0f, 0.0f, 100.0f});
+	AttachToSpaceShip(SpaceShip);
+	SetCharacterMainState(ECharacterMainState::ECMS_OnSpaceShip);
+}
+
+void AMainCharacter::AttachToSpaceShip(AMainSpaceShip* SpaceShip)
+{
+	const FAttachmentTransformRules Rules{EAttachmentRule::KeepWorld, true};
+	AttachToActor(SpaceShip, Rules);
+}
+
+void AMainCharacter::DetachFromSpaceShip(AMainSpaceShip* SpaceShip)
+{
+	const FDetachmentTransformRules Rules{EDetachmentRule::KeepWorld, false};
+	DetachFromActor(Rules);
+}
+
+bool AMainCharacter::IsOnSpaceShip() const
+{
+	return CharacterMainState == ECharacterMainState::ECMS_OnSpaceShip;
 }
