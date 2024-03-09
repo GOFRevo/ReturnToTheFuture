@@ -61,6 +61,7 @@ public:
 	void ToOTView();
 
 	float GetCameraBehaviorParam(const FName& CurveName) const;
+	FVector CalculateAxisIndependentLag(const FVector& CurrentLocation, const FVector& TargetLocation, const FRotator& CameraRotation, const FVector& LagSpeeds, float DeltaTime);
 
 	bool CanChangeCameraViewState(ECameraViewState NewState) const;
 };

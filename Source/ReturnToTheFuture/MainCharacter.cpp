@@ -69,7 +69,7 @@ void AMainCharacter::GetOnSpaceShip(AMainSpaceShip* SpaceShip)
 {
 	GetCharacterMovement()->GravityScale = 0.0f;
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"), true);
-	SetActorLocation(SpaceShip->GetActorLocation() + FVector{0.0f, 0.0f, 140.0f});
+	SetActorLocation(SpaceShip->GetActorLocation() + FVector{100.0f, 0.0f, 100.0f});
 	AttachToSpaceShip(SpaceShip);
 	SetCharacterMainState(ECharacterMainState::ECMS_OnSpaceShip);
 }
