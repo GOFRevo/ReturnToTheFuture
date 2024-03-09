@@ -53,7 +53,18 @@ public:
 	float CameraOffsetY;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float CameraOffsetZ;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|Total", Meta = (AllowPrivateAccess = "true"))
+	FRotator DefaultCameraRotation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
+	bool bSpaceShipCameraRotationNeedReset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|IT", meta = (AllowPrivateAccess = "true"))
+	bool bITCameraRotationNeedReset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|IF", meta = (AllowPrivateAccess = "true"))
+	bool bIFCameraRotationNeedReset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|OT", meta = (AllowPrivateAccess = "true"))
+	bool bOTCameraRotationNeedReset;
+
 	ARTFCameraManager();
 
 	void CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
@@ -76,9 +87,11 @@ public:
 	void ToITView();
 	void ToIFView();
 	void ToOTView();
+	void ResetCameraRotation(ECameraViewState NewState);
 
 	float GetCameraBehaviorParam(const FName& CurveName) const;
 	FVector CalculateAxisIndependentLag(const FVector& CurrentLocation, const FVector& TargetLocation, const FRotator& CameraRotation, const FVector& LagSpeeds, float DeltaTime);
 
 	bool CanChangeCameraViewState(ECameraViewState NewState) const;
+	bool CanResetCameraRotation(ECameraViewState NewState) const;
 };

@@ -11,7 +11,21 @@
 
 ARTFCameraManager::ARTFCameraManager():
 	CameraViewState(ECameraViewState::ECVS_ITView),
-	RTFCameraAnimInstance(nullptr)
+	RTFCameraAnimInstance(nullptr),
+	RotationLagSpeed(0.0f),
+	PivotLagSpeedX(0.0f),
+	PivotLagSpeedY(0.0f),
+	PivotLagSpeedZ(0.0f),
+	PivotOffsetX(0.0f),
+	PivotOffsetY(0.0f),
+	PivotOffsetZ(0.0f),
+	CameraOffsetX(0.0f),
+	CameraOffsetY(0.0f),
+	CameraOffsetZ(0.0f),
+	bSpaceShipCameraRotationNeedReset(false),
+	bITCameraRotationNeedReset(false),
+	bIFCameraRotationNeedReset(false),
+	bOTCameraRotationNeedReset(false)
 {
 	InstancePointer = this;
 	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Camera Behavior"));
@@ -132,7 +146,15 @@ void ARTFCameraManager::SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo&
 	// }
 	
 	ViewInfo.Location = SpaceShipCameraMovementInfo.TargetCameraLocation;
-	ViewInfo.Rotation = SpaceShipCameraMovementInfo.TargetCameraRotation;
+	if(bSpaceShipCameraRotationNeedReset)
+	{
+		ARTFController::GetInstance()->SetControlRotation(DefaultCameraRotation);
+		ViewInfo.Rotation = DefaultCameraRotation;
+		bSpaceShipCameraRotationNeedReset = false;
+	}else
+	{
+		ViewInfo.Rotation = SpaceShipCameraMovementInfo.TargetCameraRotation;
+	}
 	ViewInfo.FOV = MainSpaceShip->SpaceShipCameraFOV;
 }
 
@@ -172,7 +194,15 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	// }
 	
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
-	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
+	if(bITCameraRotationNeedReset)
+	{
+		ARTFController::GetInstance()->SetControlRotation(DefaultCameraRotation);
+		ViewInfo.Rotation = DefaultCameraRotation;
+		bITCameraRotationNeedReset = false;
+	}else
+	{
+		ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
+	}
 	ViewInfo.FOV = MainCharacter->ITCameraFOV;
 }
 
@@ -212,7 +242,15 @@ void ARTFCameraManager::IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	// }
 	
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
-	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
+	if(bIFCameraRotationNeedReset)
+	{
+		ARTFController::GetInstance()->SetControlRotation(DefaultCameraRotation);
+		ViewInfo.Rotation = DefaultCameraRotation;
+		bIFCameraRotationNeedReset = false;
+	}else
+	{
+		ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
+	}
 	ViewInfo.FOV = MainCharacter->IFCameraFOV;
 }
 
@@ -252,28 +290,77 @@ void ARTFCameraManager::OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	// }
 	
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
-	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
+	if(bOTCameraRotationNeedReset)
+	{
+		ARTFController::GetInstance()->SetControlRotation(DefaultCameraRotation);
+		ViewInfo.Rotation = DefaultCameraRotation;
+		bOTCameraRotationNeedReset = false;
+	}else
+	{
+		ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
+	}
 	ViewInfo.FOV = MainCharacter->OTCameraFOV;
 }
 
 void ARTFCameraManager::ToSpaceShipView()
 {
-	SetCameraViewState(ECameraViewState::ECVS_SpaceShipView);
+	const ECameraViewState NewState = ECameraViewState::ECVS_SpaceShipView;
+	if(CanResetCameraRotation(NewState))
+	{
+		ResetCameraRotation(NewState);
+	}
+	SetCameraViewState(NewState);
 }
 
 void ARTFCameraManager::ToITView()
 {
-	SetCameraViewState(ECameraViewState::ECVS_ITView);
+	const ECameraViewState NewState = ECameraViewState::ECVS_ITView;
+	if(CanResetCameraRotation(NewState))
+	{
+		ResetCameraRotation(NewState);
+	}
+	SetCameraViewState(NewState);
 }
 
 void ARTFCameraManager::ToIFView()
 {
-	SetCameraViewState(ECameraViewState::ECVS_IFView);
+	const ECameraViewState NewState = ECameraViewState::ECVS_IFView;
+	if(CanResetCameraRotation(NewState))
+	{
+		ResetCameraRotation(NewState);
+	}
+	SetCameraViewState(NewState);
 }
 
 void ARTFCameraManager::ToOTView()
 {
-	SetCameraViewState(ECameraViewState::ECVS_OTView);
+	const ECameraViewState NewState = ECameraViewState::ECVS_OTView;
+	if(CanResetCameraRotation(NewState))
+	{
+		ResetCameraRotation(NewState);
+	}
+	SetCameraViewState(NewState);
+}
+
+void ARTFCameraManager::ResetCameraRotation(const ECameraViewState State)
+{
+	switch(State)
+	{
+	case ECameraViewState::ECVS_SpaceShipView:
+		bSpaceShipCameraRotationNeedReset = true;
+		break;
+	case ECameraViewState::ECVS_ITView:
+		bITCameraRotationNeedReset = true;
+		break;
+	case ECameraViewState::ECVS_IFView:
+		bIFCameraRotationNeedReset = true;
+		break;
+	case ECameraViewState::ECVS_OTView:
+		bOTCameraRotationNeedReset = true;
+		break;
+	default:
+		check(0)
+	}
 }
 
 float ARTFCameraManager::GetCameraBehaviorParam(const FName& CurveName) const
@@ -298,4 +385,14 @@ bool ARTFCameraManager::CanChangeCameraViewState(ECameraViewState NewState) cons
 {
 	return CameraViewState != NewState && CameraViewState != ECameraViewState::ECVS_EmptyView;
 }
+
+bool ARTFCameraManager::CanResetCameraRotation(ECameraViewState NewState) const
+{
+	const ECameraViewState CurCameraViewState = GetCameraViewState();
+	if(NewState == ECameraViewState::ECVS_SpaceShipView) return true;
+	if(NewState == ECameraViewState::ECVS_IFView) return true;
+	if(NewState == ECameraViewState::ECVS_ITView) return true;
+	return false;
+}
+
 
