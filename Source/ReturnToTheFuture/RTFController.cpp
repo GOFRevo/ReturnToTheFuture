@@ -397,3 +397,9 @@ bool ARTFController::CanGetOnSpaceShip() const
 {
 	return !MainCharacter->IsOnSpaceShip();
 }
+
+bool ARTFController::CanCacheSpaceShipCamera() const
+{
+	return MainCharacter->IsOnSpaceShip();
+}
+

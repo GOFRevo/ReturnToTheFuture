@@ -23,6 +23,7 @@ public:
 	URTFCameraAnimInstance();
 
 	void UpdateSpaceShipInfo();
+	void UpdateSpaceShipCachedInfo();
 	void UpdateITInfo();
 	void UpdateIFInfo();
 	void UpdateOTInfo();

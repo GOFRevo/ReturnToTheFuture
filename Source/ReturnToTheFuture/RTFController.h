@@ -154,4 +154,5 @@ public:
 	bool CanChangeControlState(EControllerState NewState) const;
 	bool CanGetOffSpaceShip() const;
 	bool CanGetOnSpaceShip() const;
+	bool CanCacheSpaceShipCamera() const;
 };
