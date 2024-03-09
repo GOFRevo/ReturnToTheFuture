@@ -6,3 +6,15 @@ float FRTFUtility::ReduceFloatError(const float Num, const float Err)
 	return Num;
 }
 
+float FRTFUtility::CalcuSin(const float Near, const float Far)
+{
+	return Far / FMath::Sqrt(Near * Near + Far * Far);
+}
+
+float FRTFUtility::Interp(const float Min, const float Max, const float Cur)
+{
+	return (Cur - Min) / (Max - Min);
+}
+
+
+

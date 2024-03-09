@@ -30,72 +30,84 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_WAxis;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_DAxis;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_ShiftPressed;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_ShiftReleased;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_SpacePressed;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_SpaceReleased;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_OnePressed;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_TwoPressed;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_ThreePressed;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_Turn;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_LookUp;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_EPressed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipLookUpRate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipTurnRate;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IT", Meta = (AllowPrivateAccess = "true"))
 	float ITLookUpRate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IT", Meta = (AllowPrivateAccess = "true"))
 	float ITTurnRate;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	float IFLookUpRate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	float IFTurnRate;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|OT", Meta = (AllowPrivateAccess = "true"))
 	float OTLookUpRate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|OT", Meta = (AllowPrivateAccess = "true"))
 	float OTTurnRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller Info", Meta = (AllowPrivateAccess = "true"))
+	bool bAllowTurnLookup;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipMaxAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipDeadZoneAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipDeadZoneRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipDeadZoneSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
+	float ITMaxAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
+	float ITDeadZoneAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
+	float ITDeadZoneRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
+	float ITDeadZoneSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
+	float IFMaxAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
+	float IFDeadZoneAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
+	float IFDeadZoneRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
+	float IFDeadZoneSpeed;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
 	EControllerState ControllerState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller State", Meta = (AllowPrivateAccess = "true"))
+	EControlViewState ControlViewState;;
 public:
 	ARTFController();
 
 	static ARTFController* GetInstance();
 	
 	virtual void SetupInputComponent() override;
+	virtual void Tick(float DeltaSeconds) override;
 	
 	UFUNCTION(BlueprintCallable)
 	void InitControllerInfo(APawn* SpaceShip);
@@ -109,6 +121,10 @@ public:
 	EControllerState GetControllerState() const;
 	UFUNCTION(BlueprintCallable)
 	void SetControllerState(EControllerState NewState);
+	UFUNCTION(BlueprintCallable)
+	EControlViewState GetControlViewState() const;
+	UFUNCTION(BlueprintCallable)
+	void SetControlViewState(EControlViewState NewState);
 
 	UFUNCTION()
 	void OnWAxis(const FInputActionValue& InputActionValue);
@@ -140,14 +156,13 @@ public:
 	void ToIFControl();
 	void ToOTControl();
 
-	void SpaceShipOnTurn(const float InputScale);
-	void SpaceShipOnLookUp(const float InputScale);
-	void ITOnTurn(const float InputScale);
-	void ITOnLookUp(const float InputScale);
-	void IFOnTurn(const float InputScale);
-	void IFOnLookUp(const float InputScale);
-	void OTOnTurn(const float InputScale);
-	void OTOnLookUp(const float InputScale);
+	void ViewOnTurn(const float InputScale, const float TurnRate, const bool bDeadZone = false, const float DeadZoneAngle = 0.0f, const float DeadZoneRate = 0.0f, const float MaxAngle = 0.0f);
+	void ViewOnLookUp(const float InputScale, const float LookupRate, const bool bDeadZone = false, const float DeadZoneAngle = 0.0f, const float DeadZoneRate = 0.0f, const float MaxAngle = 0.0f);
+	void BlockTurnAndLook();
+	void OpenTurnAndLook();
+	void EscapeDeadZone();
+	void EscapeDeadZoneImpl(const float DeadZoneAngle, const float DeadZoneSpeed);
+	float MapControlRotation(const float Angle) const;
 
 	bool CanSpaceShipInputMove() const;
 	bool CanCharacterInputMove() const;
@@ -155,4 +170,5 @@ public:
 	bool CanGetOffSpaceShip() const;
 	bool CanGetOnSpaceShip() const;
 	bool CanCacheSpaceShipCamera() const;
+	bool CanTurnAndLook() const;
 };

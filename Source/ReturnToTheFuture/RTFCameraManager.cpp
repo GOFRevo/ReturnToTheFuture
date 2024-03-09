@@ -11,9 +11,7 @@
 
 ARTFCameraManager::ARTFCameraManager():
 	CameraViewState(ECameraViewState::ECVS_ITView),
-	RTFCameraAnimInstance(nullptr),
-	TotalCameraMovementInfo{},
-	SpaceShipCameraMovementInfo{}
+	RTFCameraAnimInstance(nullptr)
 {
 	InstancePointer = this;
 	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Camera Behavior"));

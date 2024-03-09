@@ -13,3 +13,12 @@ enum class EControllerState: uint8
 
 	ECS_MAX UMETA(DisplayName = "DefaultMax")
 };
+
+UENUM(BlueprintType)
+enum class EControlViewState: uint8
+{
+	ECVS_UserView UMETA(DisplayName = "User"),
+	ECVS_ShowView UMETA(DisplayName = "Show"),
+
+	ECVS_MAX UMETA(DisplayName = "DefaultMax")
+};

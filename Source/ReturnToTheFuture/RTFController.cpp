@@ -5,6 +5,7 @@
 #include "MainSpaceShip.h"
 #include "MainCharacter.h"
 #include "RTFCameraManager.h"
+#include "RTFUtility.h"
 #include "Components/CapsuleComponent.h"
 
 ARTFController::ARTFController():
@@ -31,7 +32,21 @@ ARTFController::ARTFController():
 	IFTurnRate(1.25f),
 	OTLookUpRate(1.25f),
 	OTTurnRate(1.25f),
-	ControllerState(EControllerState::ECS_IT)
+	bAllowTurnLookup(true),
+	SpaceShipMaxAngle(0.0f),
+	SpaceShipDeadZoneAngle(0.0f),
+	SpaceShipDeadZoneRate(0.0f),
+	SpaceShipDeadZoneSpeed(0.0f),
+	ITMaxAngle(0.0f),
+	ITDeadZoneAngle(0.0f),
+	ITDeadZoneRate(0.0f),
+	ITDeadZoneSpeed(0.0f),
+	IFMaxAngle(0.0f),
+	IFDeadZoneAngle(0.0f),
+	IFDeadZoneRate(0.0f),
+	IFDeadZoneSpeed(0.0f),
+	ControllerState(EControllerState::ECS_IT),
+	ControlViewState(EControlViewState::ECVS_UserView)
 {
 	InstancePointer = this;
 }
@@ -114,6 +129,23 @@ void ARTFController::SetupInputComponent()
 	}
 }
 
+void ARTFController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	switch(GetControlViewState())
+	{
+	case EControlViewState::ECVS_UserView:
+		EscapeDeadZone();
+		break;
+	case EControlViewState::ECVS_ShowView:
+		break;
+	default:
+		check(0);
+	}
+}
+
+
 void ARTFController::InitControllerInfo(APawn* SpaceShip)
 {
 	if(MainSpaceShip != nullptr) return;
@@ -131,6 +163,16 @@ EControllerState ARTFController::GetControllerState() const
 void ARTFController::SetControllerState(EControllerState NewState)
 {
 	ControllerState = NewState;
+}
+
+EControlViewState ARTFController::GetControlViewState() const
+{
+	return ControlViewState;
+}
+
+void ARTFController::SetControlViewState(EControlViewState NewState)
+{
+	ControlViewState = NewState;
 }
 
 AMainCharacter* ARTFController::GetMainCharacter() const
@@ -277,16 +319,16 @@ void ARTFController::OnTurn(const FInputActionValue& InputActionValue)
 	switch(CameraManager->GetCameraViewState())
 	{
 	case ECameraViewState::ECVS_SpaceShipView:
-		SpaceShipOnTurn(InputScale);
+		ViewOnTurn(InputScale,  SpaceShipTurnRate, true, SpaceShipDeadZoneAngle, SpaceShipDeadZoneRate, SpaceShipMaxAngle);
 		break;
 	case ECameraViewState::ECVS_ITView:
-		ITOnTurn(InputScale);
+		ViewOnTurn(InputScale,  ITTurnRate, true, ITDeadZoneAngle, ITDeadZoneRate, ITMaxAngle);
 		break;
 	case ECameraViewState::ECVS_IFView:
-		IFOnTurn(InputScale);
+		ViewOnTurn(InputScale,  ITTurnRate, true, IFDeadZoneAngle, IFDeadZoneRate, IFMaxAngle);
 		break;
 	case ECameraViewState::ECVS_OTView:
-		OTOnTurn(InputScale);
+		ViewOnTurn(InputScale,  OTTurnRate, false);
 		break;
 	default:
 		check(false);
@@ -300,16 +342,16 @@ void ARTFController::OnLookUp(const FInputActionValue& InputActionValue)
 	switch(CameraManager->GetCameraViewState())
 	{
 	case ECameraViewState::ECVS_SpaceShipView:
-		SpaceShipOnLookUp(InputScale);
+		ViewOnLookUp(InputScale, SpaceShipLookUpRate,true, SpaceShipDeadZoneAngle, SpaceShipDeadZoneRate, SpaceShipMaxAngle);
 		break;
 	case ECameraViewState::ECVS_ITView:
-		ITOnLookUp(InputScale);
+		ViewOnLookUp(InputScale, ITLookUpRate, true, ITDeadZoneAngle, ITDeadZoneRate, ITMaxAngle);
 		break;
 	case ECameraViewState::ECVS_IFView:
-		IFOnLookUp(InputScale);
+		ViewOnLookUp(InputScale, IFLookUpRate, true,IFDeadZoneAngle, IFDeadZoneRate, IFMaxAngle);
 		break;
 	case ECameraViewState::ECVS_OTView:
-		OTOnLookUp(InputScale);
+		ViewOnLookUp(InputScale, OTLookUpRate, false);
 		break;
 	default:
 		check(false);
@@ -332,44 +374,126 @@ void ARTFController::OnEPressed()
 	}
 }
 
-void ARTFController::SpaceShipOnTurn(const float InputScale)
+void ARTFController::ViewOnTurn(const float InputScale, const float TurnRate, const bool bDeadZone, const float DeadZoneAngle, const float DeadZoneRate, const float MaxAngle)
 {
-	AddYawInput(InputScale * SpaceShipTurnRate);
+	if(!CanTurnAndLook()) return;
+	const FRotator CurRotation = GetControlRotation();
+	const float Value = InputScale * TurnRate;
+	if(!bDeadZone)
+	{
+		SetControlRotation(CurRotation + FRotator{0.0f, Value, 0.0f});
+		return;
+	}
+	const float YawAngle = MapControlRotation(GetControlRotation().Yaw) + Value;
+	const float PitchAngle = MapControlRotation(GetControlRotation().Pitch);
+	const float CurValue = YawAngle * YawAngle + PitchAngle * PitchAngle;
+
+	const float Max = MaxAngle * MaxAngle;
+	const float Min = DeadZoneAngle * DeadZoneAngle;
+	if(CurValue >= Max) return;
+	if(CurValue <= Min)
+	{
+		SetControlRotation(CurRotation + FRotator{0.0f, Value, 0.0f});
+	}else
+	{
+		SetControlRotation(CurRotation + FRotator{0.0f, InputScale * DeadZoneRate * FRTFUtility::Interp(Max, Min, CurValue), 0.0f});
+	}
 }
 
-void ARTFController::SpaceShipOnLookUp(const float InputScale)
+void ARTFController::ViewOnLookUp(const float InputScale, const float LookupRate, const bool bDeadZone, const float DeadZoneAngle, const float DeadZoneRate, const float MaxAngle)
 {
-	AddPitchInput(InputScale * SpaceShipLookUpRate);
+	if(!CanTurnAndLook()) return;
+	const FRotator CurRotation = GetControlRotation();
+	const float Value = InputScale * LookupRate;
+	if(!bDeadZone)
+	{
+		SetControlRotation(CurRotation - FRotator{Value, 0.0f, 0.0f});
+		return;
+	}
+	const float YawAngle = MapControlRotation(GetControlRotation().Yaw);
+	const float PitchAngle = MapControlRotation(GetControlRotation().Pitch) + Value;
+	const float CurValue = YawAngle * YawAngle + PitchAngle * PitchAngle;
+
+	const float Max = MaxAngle * MaxAngle;
+	const float Min = DeadZoneAngle * DeadZoneAngle;
+	if(CurValue >= Max) return;
+	if(CurValue <= Min)
+	{
+		SetControlRotation(CurRotation - FRotator{Value, 0.0f, 0.0f});
+	}else
+	{
+		SetControlRotation(CurRotation - FRotator{InputScale * DeadZoneRate * FRTFUtility::Interp(Max, Min, CurValue), 0.0f, 0.0f});
+	}
 }
 
-void ARTFController::ITOnTurn(const float InputScale)
+void ARTFController::BlockTurnAndLook()
 {
-	AddYawInput(InputScale * ITTurnRate);
+	bAllowTurnLookup = false;
 }
 
-void ARTFController::ITOnLookUp(const float InputScale)
+void ARTFController::OpenTurnAndLook()
 {
-	AddPitchInput(InputScale * ITLookUpRate);
+	bAllowTurnLookup = true;
 }
 
-void ARTFController::IFOnTurn(const float InputScale)
+void ARTFController::EscapeDeadZone()
 {
-	AddYawInput(InputScale * IFTurnRate);
+	const ECameraViewState CameraViewState = ARTFCameraManager::GetInstance()->GetCameraViewState();
+	switch(CameraViewState)
+	{
+	case ECameraViewState::ECVS_SpaceShipView:
+		EscapeDeadZoneImpl(SpaceShipDeadZoneAngle, SpaceShipDeadZoneSpeed);
+		break;
+	case ECameraViewState::ECVS_ITView:
+		EscapeDeadZoneImpl(ITDeadZoneAngle, ITDeadZoneSpeed);
+		break;
+	case ECameraViewState::ECVS_IFView:
+		EscapeDeadZoneImpl(IFDeadZoneAngle, IFDeadZoneSpeed);
+		break;
+	case ECameraViewState::ECVS_OTView:
+		break;
+	case ECameraViewState::ECVS_EmptyView:
+		break;
+	default:
+		check(0)
+	}
+	
 }
 
-void ARTFController::IFOnLookUp(const float InputScale)
+void ARTFController::EscapeDeadZoneImpl(const float DeadZoneAngle, const float DeadZoneSpeed)
 {
-	AddPitchInput(InputScale * IFLookUpRate);
+	FRotator CurRotation = GetControlRotation();
+	const float YawAngle = MapControlRotation(CurRotation.Yaw);
+	const float PitchAngle = MapControlRotation(CurRotation.Pitch);
+	
+	const float Length = YawAngle * YawAngle + PitchAngle * PitchAngle;
+	if(DeadZoneAngle * DeadZoneAngle > Length) return;
+	
+	const float YawDir = YawAngle > 0.0f? -1.0f: 1.0f;
+	const float AbsPitch = FMath::Abs(PitchAngle);
+	if(AbsPitch < 1.0f)
+	{
+		SetControlRotation(CurRotation + FRotator{0.0f, DeadZoneSpeed * YawDir, 0.0f});
+		return;
+	}
+	const float PitchDir = PitchAngle > 0.0f? -1.0f: 1.0f;
+	const float AbsYaw = FMath::Abs(YawAngle);
+	if(AbsYaw < 1.0f)
+	{
+		SetControlRotation(CurRotation + FRotator{DeadZoneSpeed * PitchDir, 0.0f, 0.0f});
+		return;
+	}
+	const float Sin = FRTFUtility::CalcuSin(AbsPitch, AbsYaw);
+	const float Cos = Sin * AbsPitch / AbsYaw;
+	SetControlRotation(CurRotation + FRotator{DeadZoneSpeed * PitchDir * Cos, 0.0f, 0.0f});
+	CurRotation = GetControlRotation();
+	SetControlRotation(CurRotation + FRotator{0.0f, DeadZoneSpeed * YawDir * Sin, 0.0f});
 }
 
-void ARTFController::OTOnTurn(const float InputScale)
+float ARTFController::MapControlRotation(const float Angle) const
 {
-	AddYawInput(InputScale * OTTurnRate);
-}
-
-void ARTFController::OTOnLookUp(const float InputScale)
-{
-	AddPitchInput(InputScale * OTLookUpRate);
+	if(Angle > 270.0f) return Angle - 360.0f;
+	return Angle;
 }
 
 bool ARTFController::CanCharacterInputMove() const
@@ -402,4 +526,10 @@ bool ARTFController::CanCacheSpaceShipCamera() const
 {
 	return MainCharacter->IsOnSpaceShip();
 }
+
+bool ARTFController::CanTurnAndLook() const
+{
+	return bAllowTurnLookup;
+}
+
 
