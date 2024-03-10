@@ -24,6 +24,8 @@ ARTFCameraManager::ARTFCameraManager():
 	CameraOffsetX(0.0f),
 	CameraOffsetY(0.0f),
 	CameraOffsetZ(0.0f),
+	SpaceShipCameraAccelDefaultRotation(0.0f),
+	SpaceShipCameraAccelRotationSpeed(5.0f),
 	bSpaceShipCameraTransformNeedReset(false),
 	bITCameraTransformNeedReset(false),
 	bIFCameraTransformNeedReset(false),
@@ -134,9 +136,17 @@ void ARTFCameraManager::SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo&
 		bSpaceShipCameraTransformNeedReset = false;
 	}else
 	{
+		FRotator ControlRotation = GetOwningPlayerController()->GetControlRotation();
 		SpaceShipCameraMovementInfo.TargetCameraRotation = UKismetMathLibrary::RInterpTo(GetCameraRotation(),
-				GetOwningPlayerController()->GetControlRotation(),
-				DeltaTime, RotationLagSpeed);
+				ControlRotation, DeltaTime, RotationLagSpeed);
+		if(MainSpaceShip->IsForwardAccelerating())
+		{
+			SpaceShipCameraMovementInfo.TargetCameraRotation = UKismetMathLibrary::RInterpTo(
+				SpaceShipCameraMovementInfo.TargetCameraRotation,
+				SpaceShipCameraAccelDefaultRotation, DeltaTime, SpaceShipCameraAccelRotationSpeed);
+			ControlRotation = SpaceShipCameraMovementInfo.TargetCameraRotation;
+			GetOwningPlayerController()->SetControlRotation(ControlRotation);
+		}
 	}
 	const FVector Temp = CalculateAxisIndependentLag(SpaceShipCameraMovementInfo.SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), SpaceShipCameraMovementInfo.TargetCameraRotation,
 		FVector(PivotLagSpeedX, PivotLagSpeedY, PivotLagSpeedZ), DeltaTime);

@@ -73,10 +73,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginMoveForward();
-	
 	virtual void EndMoveForward();
-	
 	virtual void BeginMoveBack();
-	
 	virtual void EndMoveBack();
+
+	bool IsForwardAccelerating() const;
 };

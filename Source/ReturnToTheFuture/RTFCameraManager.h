@@ -54,6 +54,10 @@ public:
 	float CameraOffsetY;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float CameraOffsetZ;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	FRotator SpaceShipCameraAccelDefaultRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipCameraAccelRotationSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
 	bool bSpaceShipCameraTransformNeedReset;

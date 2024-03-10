@@ -131,5 +131,9 @@ void ABaseSpaceShip::BeginMoveBack()
 void ABaseSpaceShip::EndMoveBack()
 {
 	bBack = false;
-	
+}
+
+bool ABaseSpaceShip::IsForwardAccelerating() const
+{
+	return bForward;
 }
