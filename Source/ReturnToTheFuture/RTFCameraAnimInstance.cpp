@@ -5,9 +5,16 @@
 #include "RTFCameraManager.h"
 
 URTFCameraAnimInstance::URTFCameraAnimInstance():
-	CameraViewState(ECameraViewState::ECVS_EmptyView)
+	CameraViewState(ECameraViewState::ECVS_EmptyView),
+	bIFToITHasCompelete(false),
+	bITToIFHasCompelete(false)
 {
 	
+}
+
+void URTFCameraAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
 }
 
 void URTFCameraAnimInstance::UpdateEssentialInfo()
@@ -42,4 +49,14 @@ void URTFCameraAnimInstance::UpdateOTInfo()
 {
 	UpdateEssentialInfo();
 	
+}
+
+void URTFCameraAnimInstance::ClearIFCompeleteFlag()
+{
+	bITToIFHasCompelete = false;
+}
+
+void URTFCameraAnimInstance::ClearITCompeleteFlag()
+{
+	bIFToITHasCompelete = false;
 }

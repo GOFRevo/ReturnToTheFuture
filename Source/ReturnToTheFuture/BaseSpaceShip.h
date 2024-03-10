@@ -30,6 +30,9 @@ protected:
 	bool bForward;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info", Meta = (AllowPrivateAccess = "true"))
+	bool bForwardTimeDecrease;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info", Meta = (AllowPrivateAccess = "true"))
 	float ForwardTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties", Meta = (AllowPrivateAccess = "true"))
@@ -70,10 +73,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void BeginMoveForward();
-	
 	virtual void EndMoveForward();
-	
 	virtual void BeginMoveBack();
-	
 	virtual void EndMoveBack();
+
+	bool IsForwardAccelerating() const;
 };

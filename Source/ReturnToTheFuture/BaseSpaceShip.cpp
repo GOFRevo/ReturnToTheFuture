@@ -10,6 +10,7 @@ ABaseSpaceShip::ABaseSpaceShip():
 	MaxForwardSpeed(500.0f),
 	SpaceShipVelocity(0.0f),
 	bForward(false),
+	bForwardTimeDecrease(true),
 	ForwardTime(0.0f),
 	MaxForwardTime(4.0f),
 	ForwardForceCurve(nullptr),
@@ -43,11 +44,18 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 	if(bForward)
 	{
 		ForwardTime += DeltaTime;
-		ForwardTime = FMath::Min(ForwardTime, MaxForwardTime);
+		if(ForwardTime > MaxForwardTime)
+		{
+			ForwardTime = MaxForwardTime;
+			bForward = false;
+		}
 	}else
 	{
-		ForwardTime -= DeltaTime;
-		ForwardTime = FMath::Max(0.0f, ForwardTime);
+		if(bForwardTimeDecrease)
+		{
+			ForwardTime -= DeltaTime;
+			ForwardTime = FMath::Max(0.0f, ForwardTime);
+		}
 	}
 
 	if(bForward)
@@ -68,11 +76,7 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 void ABaseSpaceShip::MoveForward(float DeltaTime)
 {
 	const float CurrentForwardSpeed = SpaceShipVelocity.X;
-	if(CurrentForwardSpeed > MaxForwardSpeed)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%f"), ForwardTime);
-		return;
-	}
+	if(CurrentForwardSpeed > MaxForwardSpeed) return;
 	SpaceShipVelocity.X = CurrentForwardSpeed +
 		ForwardForceCurve->GetFloatValue(ForwardTime) * DeltaTime / Quality;
 }
@@ -110,12 +114,13 @@ void ABaseSpaceShip::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 void ABaseSpaceShip::BeginMoveForward()
 {
 	bForward = true;
+	bForwardTimeDecrease = false;
 }
 
 void ABaseSpaceShip::EndMoveForward()
 {
 	bForward = false;
-	
+	bForwardTimeDecrease = true;
 }
 
 void ABaseSpaceShip::BeginMoveBack()
@@ -126,5 +131,9 @@ void ABaseSpaceShip::BeginMoveBack()
 void ABaseSpaceShip::EndMoveBack()
 {
 	bBack = false;
-	
+}
+
+bool ABaseSpaceShip::IsForwardAccelerating() const
+{
+	return bForward;
 }

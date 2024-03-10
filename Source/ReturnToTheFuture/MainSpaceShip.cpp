@@ -4,18 +4,29 @@
 #include "MainSpaceShip.h"
 #include "MainCharacter.h"
 #include "RTFCameraManager.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AMainSpaceShip::AMainSpaceShip():
+	SpaceShipFOVCurve(nullptr),
 	MainCharacter(nullptr),
-	SpaceShipCameraFOV(90.0f)
+	SpaceShipCameraFOV(0.0f),
+	SpaceShipCameraMinFOV(0.0f),
+	SpaceShipCameraFOVSpeed(1.0f)
 {
+}
+
+void AMainSpaceShip::BeginPlay()
+{
+	Super::BeginPlay();
+	SpaceShipCameraMinFOV = SpaceShipFOVCurve->GetFloatValue(MaxForwardTime);
+	SpaceShipCameraFOV = SpaceShipCameraMinFOV;
 }
 
 void AMainSpaceShip::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	UpdateFOV(DeltaSeconds);
 }
-
 
 AMainCharacter* AMainSpaceShip::GetMainCharacter() const
 {
@@ -32,4 +43,12 @@ void AMainSpaceShip::InitMainSpaceShipInfo()
 {
 	MainCharacter = GetMainCharacter();
 }
+
+void AMainSpaceShip::UpdateFOV(float DeltaTime)
+{
+	float FOVTarget = SpaceShipCameraMinFOV;
+	if(bForward) FOVTarget = SpaceShipFOVCurve->GetFloatValue(ForwardTime);
+	SpaceShipCameraFOV = UKismetMathLibrary::FInterpTo(SpaceShipCameraFOV, FOVTarget, DeltaTime, SpaceShipCameraFOVSpeed);
+}
+
 

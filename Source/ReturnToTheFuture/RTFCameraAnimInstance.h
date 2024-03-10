@@ -19,12 +19,21 @@ private:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraAnimInstance Info", Meta = (AllowPrivateAccess = "true"))
 	ECameraViewState CameraViewState;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CameraAnimInstance Info", Meta = (AllowPrivateAccess = "true"))
+	bool bIFToITHasCompelete;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CameraAnimInstance Info", Meta = (AllowPrivateAccess = "true"))
+	bool bITToIFHasCompelete;
+
 	URTFCameraAnimInstance();
+
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	void UpdateSpaceShipInfo();
 	void UpdateSpaceShipCachedInfo();
 	void UpdateITInfo();
 	void UpdateIFInfo();
 	void UpdateOTInfo();
+
+	void ClearITCompeleteFlag();
+	void ClearIFCompeleteFlag();
 };

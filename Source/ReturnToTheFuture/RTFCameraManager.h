@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CameraEnums.h"
+#include "CameraStruct.h"
 #include "Camera/PlayerCameraManager.h"
 #include "RTFCameraManager.generated.h"
 
@@ -22,28 +23,17 @@ private:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
 	ECameraViewState CameraViewState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
+	ECameraViewState LastCameraViewState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
 	class URTFCameraAnimInstance* RTFCameraAnimInstance;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FRotator TargetCameraRotation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FVector TargetCameraLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FVector PivotLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
-	FTransform SmoothedPivotTarget;
+	FCameraMovementInfo TotalCameraMovementInfo;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
+	FCameraMovementInfo SpaceShipCameraMovementInfo;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FRotator SpaceShipTargetCameraRotation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FVector SpaceShipTargetCameraLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FVector SpaceShipPivotLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
-	FTransform SmoothedSpaceShipPivotTarget;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float RotationLagSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
@@ -64,6 +54,27 @@ public:
 	float CameraOffsetY;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float CameraOffsetZ;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	FRotator SpaceShipCameraAccelDefaultRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipCameraAccelRotationSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
+	bool bSpaceShipCameraTransformNeedReset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
+	FRotator DefaultSpaceShipCameraRotation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|IT", meta = (AllowPrivateAccess = "true"))
+	bool bITCameraTransformNeedReset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
+	FRotator DefaultITCameraRotation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|IF", meta = (AllowPrivateAccess = "true"))
+	bool bIFCameraTransformNeedReset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
+	FRotator DefaultIFCameraRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IFToIT", Meta = (AllowPrivateAccess = "true"))
+	float IFToITTransitionSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|ITToIF", Meta = (AllowPrivateAccess = "true"))
+	float ITToIFTransitionSpeed;
 	
 	ARTFCameraManager();
 
@@ -76,6 +87,10 @@ public:
 	ECameraViewState GetCameraViewState() const;
 	UFUNCTION(Blueprintable)
 	void SetCameraViewState(ECameraViewState NewViewState);
+	UFUNCTION(Blueprintable)
+	ECameraViewState GetLastCameraViewState() const;
+	UFUNCTION(Blueprintable)
+	void SetLastCameraViewState(ECameraViewState NewViewState);
 
 	void SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 	void SpaceShipCameraCache(float DeltaTime);
@@ -87,9 +102,12 @@ public:
 	void ToITView();
 	void ToIFView();
 	void ToOTView();
+	void ResetCameraTransform(ECameraViewState NewState);
 
 	float GetCameraBehaviorParam(const FName& CurveName) const;
 	FVector CalculateAxisIndependentLag(const FVector& CurrentLocation, const FVector& TargetLocation, const FRotator& CameraRotation, const FVector& LagSpeeds, float DeltaTime);
 
 	bool CanChangeCameraViewState(ECameraViewState NewState) const;
+	bool CanResetCameraTransform(ECameraViewState NewState) const;
+	bool CanInterpCameraRotation() const;
 };
