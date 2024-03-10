@@ -2,6 +2,7 @@
 
 
 #include "RTFCameraManager.h"
+
 #include "RTFController.h"
 #include "MainCharacter.h"
 #include "MainSpaceShip.h"
@@ -11,6 +12,7 @@
 
 ARTFCameraManager::ARTFCameraManager():
 	CameraViewState(ECameraViewState::ECVS_ITView),
+	LastCameraViewState(ECameraViewState::ECVS_ITView),
 	RTFCameraAnimInstance(nullptr),
 	RotationLagSpeed(0.0f),
 	PivotLagSpeedX(0.0f),
@@ -24,7 +26,9 @@ ARTFCameraManager::ARTFCameraManager():
 	CameraOffsetZ(0.0f),
 	bSpaceShipCameraTransformNeedReset(false),
 	bITCameraTransformNeedReset(false),
-	bIFCameraTransformNeedReset(false)
+	bIFCameraTransformNeedReset(false),
+	IFToITTransitionSpeed(0.2f),
+	ITToIFTransitionSpeed(0.2f)
 {
 	InstancePointer = this;
 	CameraBehavior = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Camera Behavior"));
@@ -40,6 +44,16 @@ void ARTFCameraManager::BeginPlay()
 {
 	Super::BeginPlay();
 	RTFCameraAnimInstance = CastChecked<URTFCameraAnimInstance>(CameraBehavior->GetAnimInstance());
+}
+
+ECameraViewState ARTFCameraManager::GetLastCameraViewState() const
+{
+	return LastCameraViewState;
+}
+
+void ARTFCameraManager::SetLastCameraViewState(ECameraViewState NewViewState)
+{
+	LastCameraViewState = NewViewState;
 }
 
 ECameraViewState ARTFCameraManager::GetCameraViewState() const
@@ -163,11 +177,20 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	const FTransform PivotTarget = MainCharacter->GetActorTransform();
 	if(bITCameraTransformNeedReset)
 	{
-		ARTFController::GetInstance()->SetControlRotation(DefaultITCameraRotation);
-		TotalCameraMovementInfo.TargetCameraRotation = DefaultITCameraRotation;
+		FRotator NewRotation;
+		if(CanInterpCameraRotation())
+		{
+			NewRotation = UKismetMathLibrary::RInterpTo(GetCameraRotation(), DefaultITCameraRotation,
+				DeltaTime, IFToITTransitionSpeed);
+		}else
+		{
+			NewRotation = DefaultITCameraRotation;
+			RTFCameraAnimInstance->ClearITCompeleteFlag();
+			bITCameraTransformNeedReset = false;
+		}
+		ARTFController::GetInstance()->SetControlRotation(NewRotation);
+		TotalCameraMovementInfo.TargetCameraRotation = NewRotation;
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(PivotTarget.GetLocation());
-		TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
-		bITCameraTransformNeedReset = false;
 	}else
 	{
 		TotalCameraMovementInfo.TargetCameraRotation = UKismetMathLibrary::RInterpTo(GetCameraRotation(),
@@ -176,8 +199,8 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 		const FVector Temp = CalculateAxisIndependentLag(TotalCameraMovementInfo.SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TotalCameraMovementInfo.TargetCameraRotation,
 			FVector(GetCameraBehaviorParam(FName("PivotLagSpeed_X")), GetCameraBehaviorParam(FName("PivotLagSpeed_Y")), GetCameraBehaviorParam(FName("PivotLagSpeed_Z"))), DeltaTime);
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(Temp);
-		TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
 	}
+	TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
 	TotalCameraMovementInfo.SmoothedPivotTarget.SetScale3D(FVector{1.0f, 1.0f, 1.0f});
 
 	TotalCameraMovementInfo.PivotLocation = TotalCameraMovementInfo.SmoothedPivotTarget.GetLocation() +
@@ -200,15 +223,24 @@ void ARTFCameraManager::IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	RTFCameraAnimInstance->UpdateIFInfo();
 	const ARTFController* RTFController = ARTFController::GetInstance();
 	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
-
+	
 	const FTransform PivotTarget = MainCharacter->GetActorTransform();
 	if(bIFCameraTransformNeedReset)
 	{
-		ARTFController::GetInstance()->SetControlRotation(DefaultIFCameraRotation);
-		TotalCameraMovementInfo.TargetCameraRotation = DefaultIFCameraRotation;
+		FRotator NewRotation;
+		if(CanInterpCameraRotation())
+		{
+			NewRotation = UKismetMathLibrary::RInterpTo(GetCameraRotation(), DefaultIFCameraRotation,
+				DeltaTime, ITToIFTransitionSpeed);
+		}else
+		{
+			NewRotation = DefaultIFCameraRotation;
+			RTFCameraAnimInstance->ClearIFCompeleteFlag();
+			bIFCameraTransformNeedReset = false;
+		}
+		ARTFController::GetInstance()->SetControlRotation(NewRotation);
+		TotalCameraMovementInfo.TargetCameraRotation = NewRotation;
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(PivotTarget.GetLocation());
-		TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
-		bIFCameraTransformNeedReset = false;
 	}else
 	{
 		TotalCameraMovementInfo.TargetCameraRotation = UKismetMathLibrary::RInterpTo(GetCameraRotation(),
@@ -217,7 +249,6 @@ void ARTFCameraManager::IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 		const FVector Temp = CalculateAxisIndependentLag(TotalCameraMovementInfo.SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TotalCameraMovementInfo.TargetCameraRotation,
 			FVector(GetCameraBehaviorParam(FName("PivotLagSpeed_X")), GetCameraBehaviorParam(FName("PivotLagSpeed_Y")), GetCameraBehaviorParam(FName("PivotLagSpeed_Z"))), DeltaTime);
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(Temp);
-		TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
 	}
 	TotalCameraMovementInfo.SmoothedPivotTarget.SetScale3D(FVector{1.0f, 1.0f, 1.0f});
 
@@ -270,6 +301,7 @@ void ARTFCameraManager::OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 void ARTFCameraManager::ToSpaceShipView()
 {
 	const ECameraViewState NewState = ECameraViewState::ECVS_SpaceShipView;
+	SetLastCameraViewState(GetCameraViewState());
 	if(CanResetCameraTransform(NewState))
 	{
 		ResetCameraTransform(NewState);
@@ -280,6 +312,7 @@ void ARTFCameraManager::ToSpaceShipView()
 void ARTFCameraManager::ToITView()
 {
 	const ECameraViewState NewState = ECameraViewState::ECVS_ITView;
+	SetLastCameraViewState(GetCameraViewState());
 	if(CanResetCameraTransform(NewState))
 	{
 		ResetCameraTransform(NewState);
@@ -290,6 +323,7 @@ void ARTFCameraManager::ToITView()
 void ARTFCameraManager::ToIFView()
 {
 	const ECameraViewState NewState = ECameraViewState::ECVS_IFView;
+	SetLastCameraViewState(GetCameraViewState());
 	if(CanResetCameraTransform(NewState))
 	{
 		ResetCameraTransform(NewState);
@@ -300,6 +334,7 @@ void ARTFCameraManager::ToIFView()
 void ARTFCameraManager::ToOTView()
 {
 	const ECameraViewState NewState = ECameraViewState::ECVS_OTView;
+	SetLastCameraViewState(GetCameraViewState());
 	if(CanResetCameraTransform(NewState))
 	{
 		ResetCameraTransform(NewState);
@@ -352,9 +387,18 @@ bool ARTFCameraManager::CanResetCameraTransform(ECameraViewState NewState) const
 {
 	const ECameraViewState CurCameraViewState = GetCameraViewState();
 	if(NewState == ECameraViewState::ECVS_SpaceShipView) return true;
-	if(NewState == ECameraViewState::ECVS_IFView) return true;
 	if(NewState == ECameraViewState::ECVS_ITView) return true;
+	if(NewState == ECameraViewState::ECVS_IFView) return true;
 	return false;
 }
 
-
+bool ARTFCameraManager::CanInterpCameraRotation() const
+{
+	const ECameraViewState Last = GetLastCameraViewState();
+	const ECameraViewState Cur = GetCameraViewState();
+	if(Last == ECameraViewState::ECVS_ITView && Cur == ECameraViewState::ECVS_IFView
+		&& !RTFCameraAnimInstance->bITToIFHasCompelete) return true;
+	if(Last == ECameraViewState::ECVS_IFView && Cur == ECameraViewState::ECVS_ITView
+		&& !RTFCameraAnimInstance->bIFToITHasCompelete) return true;
+	return false;
+}

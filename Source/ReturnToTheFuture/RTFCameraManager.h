@@ -23,13 +23,14 @@ private:
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
 	ECameraViewState CameraViewState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
+	ECameraViewState LastCameraViewState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info", Meta = (AllowPrivateAccess = "true"))
 	class URTFCameraAnimInstance* RTFCameraAnimInstance;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|Total", meta = (AllowPrivateAccess = "true"))
 	FCameraMovementInfo TotalCameraMovementInfo;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|SpaceShip", meta = (AllowPrivateAccess = "true"))
 	FCameraMovementInfo SpaceShipCameraMovementInfo;
 	
@@ -66,7 +67,11 @@ public:
 	bool bIFCameraTransformNeedReset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))
 	FRotator DefaultIFCameraRotation;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IFToIT", Meta = (AllowPrivateAccess = "true"))
+	float IFToITTransitionSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|ITToIF", Meta = (AllowPrivateAccess = "true"))
+	float ITToIFTransitionSpeed;
+	
 	ARTFCameraManager();
 
 	void CustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
@@ -78,6 +83,10 @@ public:
 	ECameraViewState GetCameraViewState() const;
 	UFUNCTION(Blueprintable)
 	void SetCameraViewState(ECameraViewState NewViewState);
+	UFUNCTION(Blueprintable)
+	ECameraViewState GetLastCameraViewState() const;
+	UFUNCTION(Blueprintable)
+	void SetLastCameraViewState(ECameraViewState NewViewState);
 
 	void SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo& ViewInfo);
 	void SpaceShipCameraCache(float DeltaTime);
@@ -96,4 +105,5 @@ public:
 
 	bool CanChangeCameraViewState(ECameraViewState NewState) const;
 	bool CanResetCameraTransform(ECameraViewState NewState) const;
+	bool CanInterpCameraRotation() const;
 };
