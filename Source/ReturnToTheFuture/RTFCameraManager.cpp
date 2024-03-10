@@ -380,7 +380,12 @@ FVector ARTFCameraManager::CalculateAxisIndependentLag(const FVector& CurrentLoc
 
 bool ARTFCameraManager::CanChangeCameraViewState(ECameraViewState NewState) const
 {
-	return CameraViewState != NewState && CameraViewState != ECameraViewState::ECVS_EmptyView;
+	// Can Not Use LastCameraViewState!
+	const ECameraViewState Cur = GetCameraViewState();
+	if(Cur == NewState || Cur == ECameraViewState::ECVS_EmptyView) return false;
+	if(Cur == ECameraViewState::ECVS_ITView && bITCameraTransformNeedReset) return false;
+	if(Cur == ECameraViewState::ECVS_IFView && bIFCameraTransformNeedReset) return false;
+	return true;
 }
 
 bool ARTFCameraManager::CanResetCameraTransform(ECameraViewState NewState) const
