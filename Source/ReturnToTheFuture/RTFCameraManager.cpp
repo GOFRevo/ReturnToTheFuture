@@ -164,14 +164,14 @@ void ARTFCameraManager::SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo&
 			SpaceShipCameraMovementInfo.TargetCameraRotation.Quaternion().GetRightVector() * CameraOffsetY +
 			SpaceShipCameraMovementInfo.TargetCameraRotation.Quaternion().GetUpVector() * CameraOffsetZ;
 	
-	// FHitResult HitResult;
-	// UKismetSystemLibrary::SphereTraceSingle(this, MainSpaceShip->GetActorLocation(), TargetCameraLocation, 10.0f,
-	//		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, TArray<AActor*>(),
-	//		EDrawDebugTrace::Type::None, HitResult, true);
-	// if(HitResult.bBlockingHit && !HitResult.bStartPenetrating)
-	// {
-	//	TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
-	// }
+	FHitResult HitResult;
+	UKismetSystemLibrary::SphereTraceSingle(this, MainSpaceShip->GetActorLocation(), SpaceShipCameraMovementInfo.TargetCameraLocation, 10.0f,
+		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel1), false, TArray<AActor*>(),
+		EDrawDebugTrace::Type::None, HitResult, true);
+	if(HitResult.bBlockingHit && !HitResult.bStartPenetrating)
+	{
+		SpaceShipCameraMovementInfo.TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
+	}
 	
 	ViewInfo.Location = SpaceShipCameraMovementInfo.TargetCameraLocation;
 	ViewInfo.Rotation = SpaceShipCameraMovementInfo.TargetCameraRotation;
@@ -302,6 +302,15 @@ void ARTFCameraManager::OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetForwardVector() * GetCameraBehaviorParam(FName("CameraOffset_X")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetRightVector() * GetCameraBehaviorParam(FName("CameraOffset_Y")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetUpVector() * GetCameraBehaviorParam(FName("CameraOffset_Z"));
+	
+	FHitResult HitResult;
+	UKismetSystemLibrary::SphereTraceSingle(this, MainCharacter->GetActorLocation(), TotalCameraMovementInfo.TargetCameraLocation, 10.0f,
+		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, TArray<AActor*>(),
+		EDrawDebugTrace::Type::None, HitResult, true);
+	if(HitResult.bBlockingHit && !HitResult.bStartPenetrating)
+	{
+		TotalCameraMovementInfo.TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
+	}
 
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
 	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
