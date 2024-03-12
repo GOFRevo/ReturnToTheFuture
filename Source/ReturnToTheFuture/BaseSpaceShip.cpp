@@ -83,6 +83,7 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 	float InputRollDirection = SpaceShipCurrentRollScale;
 	const FRotator CurrentActorRotation = GetActorRotation();
 	const float CurrentRollAngle = MapRotationAngle(CurrentActorRotation.Roll);
+	const float AngleScale = FMath::Abs(CurrentRollAngle) / SpaceShipMaxRollAngle;
 	const float RollDirection = CurrentRollAngle < 0.0f? -1.0f: 1.0f;
 	FRotator NextRotation{0.0f};
 	if(FMath::IsNearlyZero(InputRollDirection, 0.01f))
@@ -92,8 +93,8 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 			NextRotation = FRotator{0.0f};
 		}else
 		{
-			TempVelocity.Z -= SpaceShipBiasSpeed * SpaceShipRollBackSpeedScale;
-			TempVelocity.Y += SpaceShipRightSpeed * SpaceShipRightBackScale * SpaceShipRollBackSpeedScale * -RollDirection;
+			TempVelocity.Z -= SpaceShipBiasSpeed * SpaceShipRollBackSpeedScale * AngleScale;
+			TempVelocity.Y += SpaceShipRightSpeed * SpaceShipRightBackScale * SpaceShipRollBackSpeedScale * -RollDirection * AngleScale;
 			TempRotationVelocity.Roll = SpaceShipRollSpeed * SpaceShipRollBackSpeedScale * -RollDirection;
 			NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
 		}
@@ -102,17 +103,16 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 		if(InputRollDirection * CurrentRollAngle < 0.0f)
 		{
 			InputRollDirection *= SpaceShipAcceRollBackSpeedScale;
-		}
-		else
+			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * 0.1f;
+		}else
 		{
-			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection;
+			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * AngleScale;
 		}
-			
 		TempRotationVelocity.Roll = SpaceShipRollSpeed * InputRollDirection;
 		NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
 		if(FMath::Abs(MapRotationAngle(NextRotation.Roll)) < SpaceShipMaxRollAngle)
 		{
-			TempVelocity.Z += SpaceShipBiasSpeed * InputRollDirection * RollDirection;
+			TempVelocity.Z += SpaceShipBiasSpeed * InputRollDirection * RollDirection * AngleScale;
 		}else
 		{
 			NextRotation.Roll = UnMapRotationAngle(NextRotation.Roll > 0.0f? SpaceShipMaxRollAngle: -SpaceShipMaxRollAngle);
