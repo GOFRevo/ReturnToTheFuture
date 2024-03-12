@@ -28,6 +28,7 @@ ARTFCameraManager::ARTFCameraManager():
 	SpaceShipCameraAccelRotationSpeed(5.0f),
 	bSpaceShipCameraTransformNeedReset(false),
 	bITCameraTransformNeedReset(false),
+	ITCameraRotationBias(10.0f),
 	bIFCameraTransformNeedReset(false),
 	IFToITTransitionSpeed(0.2f),
 	ITToIFTransitionSpeed(0.2f)
@@ -183,6 +184,7 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	RTFCameraAnimInstance->UpdateITInfo();
 	const ARTFController* RTFController = ARTFController::GetInstance();
 	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
+	const AMainSpaceShip* MainSpaceShip = RTFController->GetMainSpaceShip();
 
 	const FTransform PivotTarget = MainCharacter->GetActorTransform();
 	if(bITCameraTransformNeedReset)
@@ -210,6 +212,7 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 			FVector(GetCameraBehaviorParam(FName("PivotLagSpeed_X")), GetCameraBehaviorParam(FName("PivotLagSpeed_Y")), GetCameraBehaviorParam(FName("PivotLagSpeed_Z"))), DeltaTime);
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(Temp);
 	}
+	
 	TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
 	TotalCameraMovementInfo.SmoothedPivotTarget.SetScale3D(FVector{1.0f, 1.0f, 1.0f});
 
@@ -222,6 +225,10 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetForwardVector() * GetCameraBehaviorParam(FName("CameraOffset_X")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetRightVector() * GetCameraBehaviorParam(FName("CameraOffset_Y")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetUpVector() * GetCameraBehaviorParam(FName("CameraOffset_Z"));
+	
+	const float SpaceShipRoll = MainSpaceShip->RollAngle() / 180.0f;
+	TotalCameraMovementInfo.TargetCameraLocation +=
+		ITCameraRotationBias * MainSpaceShip->RollAngleScale() * FVector{0.0f, FMath::Cos(SpaceShipRoll), -FMath::Sin(SpaceShipRoll)};
 
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
 	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;

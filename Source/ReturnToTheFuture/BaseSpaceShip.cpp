@@ -205,6 +205,16 @@ float ABaseSpaceShip::UnMapRotationAngle(float Angle) const
 	return Angle;
 }
 
+float ABaseSpaceShip::RollAngleScale() const
+{
+	return MapRotationAngle(GetActorRotation().Roll) / SpaceShipMaxRollAngle;
+}
+
+float ABaseSpaceShip::RollAngle() const
+{
+	return MapRotationAngle(GetActorRotation().Roll);
+}
+
 bool ABaseSpaceShip::IsForwardAccelerating() const
 {
 	return bForward;

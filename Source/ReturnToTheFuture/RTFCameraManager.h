@@ -67,6 +67,8 @@ public:
 	bool bITCameraTransformNeedReset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
 	FRotator DefaultITCameraRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IT", Meta = (AllowPrivateAccess = "true"))
+	float ITCameraRotationBias;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|IF", meta = (AllowPrivateAccess = "true"))
 	bool bIFCameraTransformNeedReset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|IF", Meta = (AllowPrivateAccess = "true"))

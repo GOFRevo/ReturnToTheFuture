@@ -93,6 +93,8 @@ public:
 
 	float MapRotationAngle(float Angle) const;
 	float UnMapRotationAngle(float Angle) const;
+	float RollAngleScale() const;
+	float RollAngle() const;
 
 	bool IsForwardAccelerating() const;
 };
