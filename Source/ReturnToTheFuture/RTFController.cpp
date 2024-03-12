@@ -202,6 +202,7 @@ void ARTFController::OnDAxis(const FInputActionValue& InputActionValue)
 {
 	if(CanSpaceShipInputMove())
 	{
+		MainCharacter->MoveSpaceShipHorizon(MainSpaceShip, InputActionValue.GetMagnitude());
 		return;
 	}
 	if(CanCharacterInputMove())

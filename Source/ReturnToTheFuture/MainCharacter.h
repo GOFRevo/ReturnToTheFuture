@@ -37,6 +37,7 @@ public:
 	void EndMoveSpaceShipForward(AMainSpaceShip* SpaceShip);
 	void BeginMoveSpaceShipBack(AMainSpaceShip* SpaceShip);
 	void EndMoveSpaceShipBack(AMainSpaceShip* SpaceShip);
+	void MoveSpaceShipHorizon(AMainSpaceShip* SpaceShip, float Scale);
 	void GetOffSpaceShip(AMainSpaceShip* SpaceShip);
 	void GetOnSpaceShip(AMainSpaceShip* SpaceShip);
 	void AttachToSpaceShip(AMainSpaceShip* SpaceShip);
