@@ -77,6 +77,8 @@ public:
 	float IFToITTransitionSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties|ITToIF", Meta = (AllowPrivateAccess = "true"))
 	float ITToIFTransitionSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Info|IF", meta = (AllowPrivateAccess = "true"))
+	FRotator IFControlRotationCache;
 	
 	ARTFCameraManager();
 

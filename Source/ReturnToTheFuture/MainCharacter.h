@@ -22,6 +22,8 @@ public:
 	float ITCameraFOV;
 	float IFCameraFOV;
 	float OTCameraFOV;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera System", Meta = (AllowPrivateAccess = "true"))
+	USceneComponent* IFCameraPivotTarget;
 	
 	AMainCharacter();
 	
@@ -42,6 +44,7 @@ public:
 	void GetOnSpaceShip(AMainSpaceShip* SpaceShip);
 	void AttachToSpaceShip(AMainSpaceShip* SpaceShip);
 	void DetachFromSpaceShip(AMainSpaceShip* SpaceShip);
+	FTransform GetIFPivotTargetTransform() const;
 
 	bool IsOnSpaceShip() const;
 };
