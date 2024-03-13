@@ -66,6 +66,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipRollBackSpeedScale;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollBackSpeedAngleBias;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipAcceRollBackSpeedScale;
 public:
 	// Sets default values for this pawn's properties
