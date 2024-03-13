@@ -189,6 +189,7 @@ void ARTFController::OnWAxis(const FInputActionValue& InputActionValue)
 {
 	if(CanSpaceShipInputMove())
 	{
+		MainCharacter->MoveSpaceShipVertical(MainSpaceShip, InputActionValue.GetMagnitude());
 		return;
 	}
 	if(CanCharacterInputMove())

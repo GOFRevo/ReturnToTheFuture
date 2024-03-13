@@ -64,6 +64,11 @@ void AMainCharacter::MoveSpaceShipHorizon(AMainSpaceShip* SpaceShip, float Scale
 	SpaceShip->MoveHorizon(Scale);
 }
 
+void AMainCharacter::MoveSpaceShipVertical(AMainSpaceShip* SpaceShip, float Scale)
+{
+	SpaceShip->MoveVertical(Scale);
+}
+
 void AMainCharacter::GetOffSpaceShip(AMainSpaceShip* SpaceShip)
 {
 	DetachFromSpaceShip(SpaceShip);

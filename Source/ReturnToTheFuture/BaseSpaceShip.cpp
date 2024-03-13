@@ -27,7 +27,8 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipBiasDistance(20.0f),
 	SpaceShipRollBackSpeedScale(1.0f),
 	SpaceShipRollBackSpeedAngleBias(0.1f),
-	SpaceShipAcceRollBackSpeedScale(2.0f)
+	SpaceShipAcceRollBackSpeedScale(2.0f),
+	SpaceShipCurrentPitchScale(0.0f)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -41,7 +42,69 @@ ABaseSpaceShip::ABaseSpaceShip():
 void ABaseSpaceShip::UpdateMove(float DeltaTime)
 {
 	FVector TempVelocity{0.0f};
-	FRotator TempRotationVelocity{0.0f};
+	FRotator NextRotation{0.0f};
+	UpdateRightMove(DeltaTime, TempVelocity, NextRotation);
+	UpdateUpMove(DeltaTime, TempVelocity, NextRotation);
+	UpdateForwardMove(DeltaTime, TempVelocity, NextRotation);
+
+	const FVector CurrentActorLocation = GetActorLocation();
+	SetActorLocation(CurrentActorLocation + (SpaceShipVelocity + TempVelocity) * DeltaTime);
+	SetActorRotation(NextRotation);
+}
+
+void ABaseSpaceShip::UpdateRightMove(float DeltaTime, FVector& TempVelocity, FRotator& NextRotation)
+{
+	// Update Right Movement
+	FRotator TempRotationVelocity;
+	float InputRollDirection = SpaceShipCurrentRollScale;
+	const FRotator CurrentActorRotation = GetActorRotation();
+	const float CurrentRollAngle = MapRotationAngle(CurrentActorRotation.Roll);
+	const float AngleScale = FMath::Abs(CurrentRollAngle) / SpaceShipMaxRollAngle;
+	const float RollDirection = CurrentRollAngle < 0.0f? -1.0f: 1.0f;
+	const float RollSpeedScale = FMath::Abs(AngleScale) + SpaceShipRollBackSpeedAngleBias;
+	if(FMath::IsNearlyZero(InputRollDirection, 0.01f))
+	{
+		if(FMath::IsNearlyZero(CurrentRollAngle, 0.1f))
+		{
+			NextRotation = FRotator{0.0f};
+		}else
+		{
+			TempVelocity.Z -= SpaceShipBiasSpeed * SpaceShipRollBackSpeedScale * AngleScale;
+			TempVelocity.Y += SpaceShipRightSpeed * SpaceShipRightBackScale * SpaceShipRollBackSpeedScale * -RollDirection * AngleScale;
+			TempRotationVelocity.Roll = SpaceShipRollSpeed * SpaceShipRollBackSpeedScale * -RollDirection * RollSpeedScale;
+			NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+		}
+	}else
+	{
+		if(InputRollDirection * CurrentRollAngle < 0.0f)
+		{
+			InputRollDirection *= SpaceShipAcceRollBackSpeedScale;
+			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * 0.1f;
+			TempVelocity.Z += SpaceShipBiasSpeed * 0.4f;
+		}else
+		{
+			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * AngleScale;
+		}
+		TempRotationVelocity.Roll = SpaceShipRollSpeed * InputRollDirection;
+		NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+		if(FMath::Abs(MapRotationAngle(NextRotation.Roll)) < SpaceShipMaxRollAngle)
+		{
+			TempVelocity.Z += SpaceShipBiasSpeed * InputRollDirection * RollDirection * AngleScale;
+		}else
+		{
+			NextRotation.Roll = UnMapRotationAngle(NextRotation.Roll > 0.0f? SpaceShipMaxRollAngle: -SpaceShipMaxRollAngle);
+		}
+	}
+	SpaceShipCurrentRollScale = 0.0f;
+}
+
+void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotator& NextRotation)
+{
+	
+}
+
+void ABaseSpaceShip::UpdateForwardMove(float DeltaTime, FVector& TempVelocity, FRotator& NextRotation)
+{
 	// Update Forward Movement
 	if(bBack)
 	{
@@ -80,54 +143,7 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 	{
 		MoveBack(DeltaTime);
 	}
-	// Update Right Movement
-	float InputRollDirection = SpaceShipCurrentRollScale;
-	const FRotator CurrentActorRotation = GetActorRotation();
-	const float CurrentRollAngle = MapRotationAngle(CurrentActorRotation.Roll);
-	const float AngleScale = FMath::Abs(CurrentRollAngle) / SpaceShipMaxRollAngle;
-	const float RollDirection = CurrentRollAngle < 0.0f? -1.0f: 1.0f;
-	const float RollSpeedScale = FMath::Abs(AngleScale) + SpaceShipRollBackSpeedAngleBias;
-	FRotator NextRotation{0.0f};
-	if(FMath::IsNearlyZero(InputRollDirection, 0.01f))
-	{
-		if(FMath::IsNearlyZero(CurrentRollAngle, 0.1f))
-		{
-			NextRotation = FRotator{0.0f};
-		}else
-		{
-			TempVelocity.Z -= SpaceShipBiasSpeed * SpaceShipRollBackSpeedScale * AngleScale;
-			TempVelocity.Y += SpaceShipRightSpeed * SpaceShipRightBackScale * SpaceShipRollBackSpeedScale * -RollDirection * AngleScale;
-			TempRotationVelocity.Roll = SpaceShipRollSpeed * SpaceShipRollBackSpeedScale * -RollDirection * RollSpeedScale;
-			NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
-		}
-	}else
-	{
-		if(InputRollDirection * CurrentRollAngle < 0.0f)
-		{
-			InputRollDirection *= SpaceShipAcceRollBackSpeedScale;
-			TempVelocity.Y -= SpaceShipRightSpeed * InputRollDirection * 0.1f;
-		}else
-		{
-			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * AngleScale;
-		}
-		TempRotationVelocity.Roll = SpaceShipRollSpeed * InputRollDirection;
-		NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
-		if(FMath::Abs(MapRotationAngle(NextRotation.Roll)) < SpaceShipMaxRollAngle)
-		{
-			TempVelocity.Z += SpaceShipBiasSpeed * InputRollDirection * RollDirection * AngleScale;
-		}else
-		{
-			NextRotation.Roll = UnMapRotationAngle(NextRotation.Roll > 0.0f? SpaceShipMaxRollAngle: -SpaceShipMaxRollAngle);
-		}
-	}
-
-	const FVector CurrentActorLocation = GetActorLocation();
-	SetActorLocation(CurrentActorLocation + (SpaceShipVelocity + TempVelocity) * DeltaTime);
-	SetActorRotation(NextRotation);
-	
-	SpaceShipCurrentRollScale = 0.0f;
 }
-
 
 void ABaseSpaceShip::MoveForward(float DeltaTime)
 {
@@ -193,6 +209,11 @@ void ABaseSpaceShip::EndMoveBack()
 void ABaseSpaceShip::MoveHorizon(float Scale)
 {
 	SpaceShipCurrentRollScale = Scale;
+}
+
+void ABaseSpaceShip::MoveVertical(float Scale)
+{
+	SpaceShipCurrentPitchScale = Scale;
 }
 
 float ABaseSpaceShip::MapRotationAngle(float Angle) const
