@@ -2,7 +2,7 @@
 
 
 #include "BaseSpaceShip.h"
-#include "RTFUtility.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ABaseSpaceShip::ABaseSpaceShip():
@@ -28,7 +28,20 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipRollBackSpeedScale(1.0f),
 	SpaceShipRollBackSpeedAngleBias(0.1f),
 	SpaceShipAcceRollBackSpeedScale(2.0f),
-	SpaceShipCurrentPitchScale(0.0f)
+	SpaceShipCurrentPitchScale(0.0f),
+	SpaceShipPitchSpeedScaleCache(0.0f),
+	SpaceShipMaxPitchAngle(10.0f),
+	SpaceShipMaxPitchTime(0.3f),
+	SpaceShipRightSpeedBias(20.0f),
+	SpaceShipAcceRightSpeedBias(40.0f),
+	SpaceShipUpSpeed(300.0f),
+	SpaceShipAccePitchBackSpeedScale(2.0f),
+	SpaceShipPitchBackSpeedScale(1.0f),
+	SpaceShipPitchBackUpSpeedScale(0.5f),
+	SpaceShipInverseUpSpeedScale(0.2f),
+	SpaceShipInverseRightSpeedScale(0.5f),
+	SpaceShipPitchSpeedScaleBackInterpSpeed(10.0f),
+	SpaceShipPitchSpeedScaleInterpSpeed(12.0f)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -42,7 +55,7 @@ ABaseSpaceShip::ABaseSpaceShip():
 void ABaseSpaceShip::UpdateMove(float DeltaTime)
 {
 	FVector TempVelocity{0.0f};
-	FRotator NextRotation{0.0f};
+	FRotator NextRotation = GetActorRotation();
 	UpdateRightMove(DeltaTime, TempVelocity, NextRotation);
 	UpdateUpMove(DeltaTime, TempVelocity, NextRotation);
 	UpdateForwardMove(DeltaTime, TempVelocity, NextRotation);
@@ -57,7 +70,7 @@ void ABaseSpaceShip::UpdateRightMove(float DeltaTime, FVector& TempVelocity, FRo
 	// Update Right Movement
 	FRotator TempRotationVelocity;
 	float InputRollDirection = SpaceShipCurrentRollScale;
-	const FRotator CurrentActorRotation = GetActorRotation();
+	const FRotator CurrentActorRotation = NextRotation;
 	const float CurrentRollAngle = MapRotationAngle(CurrentActorRotation.Roll);
 	const float AngleScale = FMath::Abs(CurrentRollAngle) / SpaceShipMaxRollAngle;
 	const float RollDirection = CurrentRollAngle < 0.0f? -1.0f: 1.0f;
@@ -66,7 +79,7 @@ void ABaseSpaceShip::UpdateRightMove(float DeltaTime, FVector& TempVelocity, FRo
 	{
 		if(FMath::IsNearlyZero(CurrentRollAngle, 0.1f))
 		{
-			NextRotation = FRotator{0.0f};
+			NextRotation.Roll = 0.0f;
 		}else
 		{
 			TempVelocity.Z -= SpaceShipBiasSpeed * SpaceShipRollBackSpeedScale * AngleScale;
@@ -100,7 +113,72 @@ void ABaseSpaceShip::UpdateRightMove(float DeltaTime, FVector& TempVelocity, FRo
 
 void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotator& NextRotation)
 {
+	float InputPitchDirection = SpaceShipCurrentPitchScale;
+	const FRotator CurrentActorRotation = NextRotation;
 	
+	const float RollCurrentAngle = MapRotationAngle(CurrentActorRotation.Roll);
+	const float RollAngleScale = RollCurrentAngle / SpaceShipMaxRollAngle;
+
+	const float PitchCurrentAngle = CurrentActorRotation.Pitch;
+	const float PitchAngleScale = PitchCurrentAngle / SpaceShipMaxPitchAngle;
+	const float PitchDirection = PitchCurrentAngle < 0.0f? -1.0f: 1.0f;
+
+	FRotator TempRotationVelocity{0.0f};
+	float PitchScale = SpaceShipPitchSpeedScaleCache;
+	if(FMath::IsNearlyZero(InputPitchDirection, 0.01f))
+	{
+		if(FMath::IsNearlyZero(PitchCurrentAngle, 0.1f))
+		{
+			NextRotation.Pitch = 0.0f;
+			PitchScale = 0.0f;
+		}else
+		{
+			const float NextTempVelocityY = TempVelocity.Y + SpaceShipRightSpeedBias * PitchAngleScale * RollAngleScale;
+			if(NextTempVelocityY * TempVelocity.Y < 0.0f) TempVelocity.Y = 0.0f;
+			else	TempVelocity.Y = NextTempVelocityY;
+			TempVelocity.Z += SpaceShipUpSpeed * PitchAngleScale * SpaceShipPitchBackUpSpeedScale;
+			PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, -PitchAngleScale * SpaceShipPitchBackSpeedScale,
+				DeltaTime, SpaceShipPitchSpeedScaleBackInterpSpeed);
+			/*
+			TempRotationVelocity.Pitch = SpaceShipPitchSpeed * -PitchAngleScale * SpaceShipPitchBackSpeedScale;
+			NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+			*/
+		}
+	}else
+	{
+		float RightSpeedBiasScale = 1.0f;
+		if(InputPitchDirection * PitchCurrentAngle < 0.0f)
+		{
+			InputPitchDirection *= SpaceShipAccePitchBackSpeedScale;
+			TempVelocity.Z += SpaceShipUpSpeed * PitchAngleScale * SpaceShipInverseUpSpeedScale;
+			RightSpeedBiasScale = SpaceShipInverseRightSpeedScale;
+		}else
+		{
+			TempVelocity.Z += SpaceShipUpSpeed * PitchAngleScale;
+		}
+		/*
+		TempRotationVelocity.Pitch = SpaceShipPitchSpeed * InputPitchDirection;
+		NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+		if(FMath::Abs(NextRotation.Pitch) > SpaceShipMaxPitchAngle)
+		{
+			NextRotation.Pitch = PitchDirection * SpaceShipMaxPitchAngle;
+		}
+		*/
+		PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, InputPitchDirection, DeltaTime, SpaceShipPitchSpeedScaleInterpSpeed);
+		const float NextTempVelocityY = TempVelocity.Y + SpaceShipRightSpeedBias * PitchAngleScale * RollAngleScale * RightSpeedBiasScale;
+		if(NextTempVelocityY * TempVelocity.Y < 0.0f) TempVelocity.Y = 0.0f;
+		else	TempVelocity.Y = NextTempVelocityY;
+	}
+	
+	TempRotationVelocity.Pitch = SpaceShipPitchSpeed * PitchScale;
+	NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+	if(FMath::Abs(NextRotation.Pitch) > SpaceShipMaxPitchAngle)
+	{
+		NextRotation.Pitch = PitchDirection * SpaceShipMaxPitchAngle;
+	}
+	
+	SpaceShipPitchSpeedScaleCache = PitchScale;
+	SpaceShipCurrentPitchScale = 0.0f;
 }
 
 void ABaseSpaceShip::UpdateForwardMove(float DeltaTime, FVector& TempVelocity, FRotator& NextRotation)
@@ -168,6 +246,7 @@ void ABaseSpaceShip::BeginPlay()
 	Super::BeginPlay();
 	SpaceShipRollSpeed = SpaceShipMaxRollAngle / SpaceShipMaxRollTime;
 	SpaceShipBiasSpeed = SpaceShipBiasDistance / SpaceShipMaxRollTime;
+	SpaceShipPitchSpeed = SpaceShipMaxPitchAngle / SpaceShipMaxPitchTime;
 }
 
 // Called every frame
