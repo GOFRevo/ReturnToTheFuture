@@ -21,6 +21,18 @@ bool FRTFUtility::Prob(const float Prob)
 	return FMath::RandRange(0.0f, 1.0f) < Prob;
 }
 
+bool FRTFUtility::IsSameMark(const float Lhs, const float Rhs)
+{
+	return Lhs * Rhs > 0.0f;
+}
+
+float FRTFUtility::GetDirection(const float Num)
+{
+	return Num > 0.0f? 1.0f: -1.0f;
+}
+
+
+
 
 
 
