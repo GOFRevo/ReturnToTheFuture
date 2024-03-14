@@ -16,5 +16,11 @@ float FRTFUtility::Interp(const float Min, const float Max, const float Cur)
 	return (Cur - Min) / (Max - Min);
 }
 
+bool FRTFUtility::Prob(const float Prob)
+{
+	return FMath::RandRange(0.0f, 1.0f) < Prob;
+}
+
+
 
 

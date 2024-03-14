@@ -6,4 +6,5 @@ public:
 	static float ReduceFloatError(const float Num, const float Err);
 	static float CalcuSin(const float Near, const float Far);
 	static float Interp(const float Min, const float Max, const float Cur);
+	static bool Prob(const float Prob);
 };

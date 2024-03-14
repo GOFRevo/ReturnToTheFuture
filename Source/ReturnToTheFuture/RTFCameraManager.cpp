@@ -28,6 +28,7 @@ ARTFCameraManager::ARTFCameraManager():
 	SpaceShipCameraAccelRotationSpeed(5.0f),
 	bSpaceShipCameraTransformNeedReset(false),
 	bITCameraTransformNeedReset(false),
+	ITCameraRotationBias(20.0f),
 	bIFCameraTransformNeedReset(false),
 	IFToITTransitionSpeed(0.2f),
 	ITToIFTransitionSpeed(0.2f)
@@ -164,14 +165,14 @@ void ARTFCameraManager::SpaceShipCustomCamera(float DeltaTime, FMinimalViewInfo&
 			SpaceShipCameraMovementInfo.TargetCameraRotation.Quaternion().GetRightVector() * CameraOffsetY +
 			SpaceShipCameraMovementInfo.TargetCameraRotation.Quaternion().GetUpVector() * CameraOffsetZ;
 	
-	// FHitResult HitResult;
-	// UKismetSystemLibrary::SphereTraceSingle(this, MainSpaceShip->GetActorLocation(), TargetCameraLocation, 10.0f,
-	//		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, TArray<AActor*>(),
-	//		EDrawDebugTrace::Type::None, HitResult, true);
-	// if(HitResult.bBlockingHit && !HitResult.bStartPenetrating)
-	// {
-	//	TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
-	// }
+	FHitResult HitResult;
+	UKismetSystemLibrary::SphereTraceSingle(this, MainSpaceShip->GetActorLocation(), SpaceShipCameraMovementInfo.TargetCameraLocation, 10.0f,
+		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel1), false, TArray<AActor*>(),
+		EDrawDebugTrace::Type::None, HitResult, true);
+	if(HitResult.bBlockingHit && !HitResult.bStartPenetrating)
+	{
+		SpaceShipCameraMovementInfo.TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
+	}
 	
 	ViewInfo.Location = SpaceShipCameraMovementInfo.TargetCameraLocation;
 	ViewInfo.Rotation = SpaceShipCameraMovementInfo.TargetCameraRotation;
@@ -183,6 +184,7 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	RTFCameraAnimInstance->UpdateITInfo();
 	const ARTFController* RTFController = ARTFController::GetInstance();
 	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
+	const AMainSpaceShip* MainSpaceShip = RTFController->GetMainSpaceShip();
 
 	const FTransform PivotTarget = MainCharacter->GetActorTransform();
 	if(bITCameraTransformNeedReset)
@@ -210,7 +212,8 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 			FVector(GetCameraBehaviorParam(FName("PivotLagSpeed_X")), GetCameraBehaviorParam(FName("PivotLagSpeed_Y")), GetCameraBehaviorParam(FName("PivotLagSpeed_Z"))), DeltaTime);
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(Temp);
 	}
-	TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
+	
+	TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(MainSpaceShip->GetActorRotation().Quaternion());
 	TotalCameraMovementInfo.SmoothedPivotTarget.SetScale3D(FVector{1.0f, 1.0f, 1.0f});
 
 	TotalCameraMovementInfo.PivotLocation = TotalCameraMovementInfo.SmoothedPivotTarget.GetLocation() +
@@ -218,11 +221,14 @@ void ARTFCameraManager::ITCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 			TotalCameraMovementInfo.SmoothedPivotTarget.GetRotation().GetRightVector() * GetCameraBehaviorParam(FName("PivotOffset_Y")) +
 			TotalCameraMovementInfo.SmoothedPivotTarget.GetRotation().GetUpVector() * GetCameraBehaviorParam(FName("PivotOffset_Z"));
 
+	TotalCameraMovementInfo.PivotLocation +=
+		ITCameraRotationBias * MainSpaceShip->RollAngleScale() * TotalCameraMovementInfo.SmoothedPivotTarget.GetRotation().GetRightVector();
+	
 	TotalCameraMovementInfo.TargetCameraLocation = TotalCameraMovementInfo.PivotLocation +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetForwardVector() * GetCameraBehaviorParam(FName("CameraOffset_X")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetRightVector() * GetCameraBehaviorParam(FName("CameraOffset_Y")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetUpVector() * GetCameraBehaviorParam(FName("CameraOffset_Z"));
-
+	
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
 	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
 	ViewInfo.FOV = MainCharacter->ITCameraFOV;
@@ -234,21 +240,27 @@ void ARTFCameraManager::IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 	const ARTFController* RTFController = ARTFController::GetInstance();
 	const AMainCharacter* MainCharacter = RTFController->GetMainCharacter();
 	
-	const FTransform PivotTarget = MainCharacter->GetActorTransform();
+	const FTransform PivotTarget = MainCharacter->GetIFPivotTargetTransform();
 	if(bIFCameraTransformNeedReset)
 	{
 		FRotator NewRotation;
+		FRotator NewControlRotation;
 		if(CanInterpCameraRotation())
 		{
 			NewRotation = UKismetMathLibrary::RInterpTo(GetCameraRotation(), DefaultIFCameraRotation,
 				DeltaTime, ITToIFTransitionSpeed);
+			NewControlRotation = UKismetMathLibrary::RInterpTo(ARTFController::GetInstance()->GetControlRotation(),
+				NewRotation + PivotTarget.Rotator(), DeltaTime, ITToIFTransitionSpeed);
 		}else
 		{
 			NewRotation = DefaultIFCameraRotation;
+			NewControlRotation = NewRotation + PivotTarget.Rotator();
+			
 			RTFCameraAnimInstance->ClearIFCompeleteFlag();
 			bIFCameraTransformNeedReset = false;
 		}
-		ARTFController::GetInstance()->SetControlRotation(NewRotation);
+		ARTFController::GetInstance()->SetControlRotation(NewControlRotation);
+		
 		TotalCameraMovementInfo.TargetCameraRotation = NewRotation;
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(PivotTarget.GetLocation());
 	}else
@@ -259,7 +271,13 @@ void ARTFCameraManager::IFCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 		const FVector Temp = CalculateAxisIndependentLag(TotalCameraMovementInfo.SmoothedPivotTarget.GetLocation(), PivotTarget.GetLocation(), TotalCameraMovementInfo.TargetCameraRotation,
 			FVector(GetCameraBehaviorParam(FName("PivotLagSpeed_X")), GetCameraBehaviorParam(FName("PivotLagSpeed_Y")), GetCameraBehaviorParam(FName("PivotLagSpeed_Z"))), DeltaTime);
 		TotalCameraMovementInfo.SmoothedPivotTarget.SetLocation(Temp);
+		
+		const FRotator OldControlRotation = ARTFController::GetInstance()->GetControlRotation() - IFControlRotationCache;
+		ARTFController::GetInstance()->SetControlRotation(OldControlRotation + PivotTarget.Rotator());
 	}
+	IFControlRotationCache = PivotTarget.Rotator();
+	
+	TotalCameraMovementInfo.SmoothedPivotTarget.SetRotation(PivotTarget.GetRotation());
 	TotalCameraMovementInfo.SmoothedPivotTarget.SetScale3D(FVector{1.0f, 1.0f, 1.0f});
 
 	TotalCameraMovementInfo.PivotLocation = TotalCameraMovementInfo.SmoothedPivotTarget.GetLocation() +
@@ -302,6 +320,15 @@ void ARTFCameraManager::OTCustomCamera(float DeltaTime, FMinimalViewInfo& ViewIn
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetForwardVector() * GetCameraBehaviorParam(FName("CameraOffset_X")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetRightVector() * GetCameraBehaviorParam(FName("CameraOffset_Y")) +
 			TotalCameraMovementInfo.TargetCameraRotation.Quaternion().GetUpVector() * GetCameraBehaviorParam(FName("CameraOffset_Z"));
+	
+	FHitResult HitResult;
+	UKismetSystemLibrary::SphereTraceSingle(this, MainCharacter->GetActorLocation(), TotalCameraMovementInfo.TargetCameraLocation, 10.0f,
+		UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, TArray<AActor*>(),
+		EDrawDebugTrace::Type::None, HitResult, true);
+	if(HitResult.bBlockingHit && !HitResult.bStartPenetrating)
+	{
+		TotalCameraMovementInfo.TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
+	}
 
 	ViewInfo.Location = TotalCameraMovementInfo.TargetCameraLocation;
 	ViewInfo.Rotation = TotalCameraMovementInfo.TargetCameraRotation;
@@ -364,6 +391,7 @@ void ARTFCameraManager::ResetCameraTransform(const ECameraViewState State)
 		break;
 	case ECameraViewState::ECVS_IFView:
 		bIFCameraTransformNeedReset = true;
+		IFControlRotationCache = FRotator{};
 		break;
 	default:
 		check(0)

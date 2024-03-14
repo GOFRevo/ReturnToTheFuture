@@ -11,8 +11,11 @@ AMainCharacter::AMainCharacter():
 	CharacterMainState(ECharacterMainState::ECMS_OnSpaceShip),
 	ITCameraFOV(90.0f),
 	IFCameraFOV(90.0f),
-	OTCameraFOV(90.0f)
+	OTCameraFOV(90.0f),
+	IFCameraPivotTarget(nullptr)
 {
+	IFCameraPivotTarget = CreateDefaultSubobject<USceneComponent>(FName("IFCameraPivotTarget"));
+	IFCameraPivotTarget->SetupAttachment(RootComponent);
 }
 
 void AMainCharacter::BeginPlay()
@@ -56,6 +59,16 @@ void AMainCharacter::EndMoveSpaceShipBack(AMainSpaceShip* SpaceShip)
 	SpaceShip->EndMoveBack();
 }
 
+void AMainCharacter::MoveSpaceShipHorizon(AMainSpaceShip* SpaceShip, float Scale)
+{
+	SpaceShip->MoveHorizon(Scale);
+}
+
+void AMainCharacter::MoveSpaceShipVertical(AMainSpaceShip* SpaceShip, float Scale)
+{
+	SpaceShip->MoveVertical(Scale);
+}
+
 void AMainCharacter::GetOffSpaceShip(AMainSpaceShip* SpaceShip)
 {
 	DetachFromSpaceShip(SpaceShip);
@@ -84,6 +97,11 @@ void AMainCharacter::DetachFromSpaceShip(AMainSpaceShip* SpaceShip)
 {
 	const FDetachmentTransformRules Rules{EDetachmentRule::KeepWorld, false};
 	DetachFromActor(Rules);
+}
+
+FTransform AMainCharacter::GetIFPivotTargetTransform() const
+{
+	return IFCameraPivotTarget->GetComponentTransform();
 }
 
 bool AMainCharacter::IsOnSpaceShip() const
