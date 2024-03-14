@@ -2,6 +2,8 @@
 
 
 #include "BaseSpaceShip.h"
+
+#include "RTFUtility.h"
 #include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
@@ -30,6 +32,7 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipAcceRollBackSpeedScale(2.0f),
 	SpaceShipCurrentPitchScale(0.0f),
 	SpaceShipPitchSpeedScaleCache(0.0f),
+	bSpaceShipPitchNeedRandom(false),
 	SpaceShipMaxPitchAngle(10.0f),
 	SpaceShipMaxPitchTime(0.3f),
 	SpaceShipRightSpeedBias(20.0f),
@@ -41,7 +44,16 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipInverseUpSpeedScale(0.2f),
 	SpaceShipInverseRightSpeedScale(0.5f),
 	SpaceShipPitchSpeedScaleBackInterpSpeed(10.0f),
-	SpaceShipPitchSpeedScaleInterpSpeed(12.0f)
+	SpaceShipPitchSpeedScaleInterpSpeed(12.0f),
+	SpaceShipPitchRandomMaxPossibility(0.6f),
+	SpaceShipPitchRandomScale(0.0f),
+	SpaceShipPitchRandomAngle(0.0f),
+	SpaceShipPitchRandomMaxAngle(8.0f),
+	SpaceShipPitchRandomInterpSpeed(10.0f),
+	SpaceShipPitchRandomMinScale(1.4f),
+	SpaceShipPitchRandomMaxScale(1.6f),
+	SpaceShipPitchMinRandomAngle(2.0f),
+	SpaceShipPitchMaxRandomAngle(4.0f)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -127,22 +139,32 @@ void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotat
 	float PitchScale = SpaceShipPitchSpeedScaleCache;
 	if(FMath::IsNearlyZero(InputPitchDirection, 0.01f))
 	{
-		if(FMath::IsNearlyZero(PitchCurrentAngle, 0.1f))
+		if(FMath::IsNearlyZero(PitchCurrentAngle, 0.2f))
 		{
-			NextRotation.Pitch = 0.0f;
-			PitchScale = 0.0f;
+			if(bSpaceShipPitchNeedRandom)
+			{
+				PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, SpaceShipPitchRandomScale,
+					 DeltaTime, SpaceShipPitchRandomInterpSpeed);
+			}else
+			{
+				NextRotation.Pitch = 0.0f;
+				PitchScale = 0.0f;
+			}
 		}else
 		{
+			if(bSpaceShipPitchNeedRandom)
+			{
+				PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, SpaceShipPitchRandomScale,
+					DeltaTime, SpaceShipPitchRandomInterpSpeed);
+			}else
+			{
+				PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, -PitchAngleScale * SpaceShipPitchBackSpeedScale,
+					DeltaTime, SpaceShipPitchSpeedScaleBackInterpSpeed);
+			}
 			const float NextTempVelocityY = TempVelocity.Y + SpaceShipRightSpeedBias * PitchAngleScale * RollAngleScale;
 			if(NextTempVelocityY * TempVelocity.Y < 0.0f) TempVelocity.Y = 0.0f;
 			else	TempVelocity.Y = NextTempVelocityY;
 			TempVelocity.Z += SpaceShipUpSpeed * PitchAngleScale * SpaceShipPitchBackUpSpeedScale;
-			PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, -PitchAngleScale * SpaceShipPitchBackSpeedScale,
-				DeltaTime, SpaceShipPitchSpeedScaleBackInterpSpeed);
-			/*
-			TempRotationVelocity.Pitch = SpaceShipPitchSpeed * -PitchAngleScale * SpaceShipPitchBackSpeedScale;
-			NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
-			*/
 		}
 	}else
 	{
@@ -156,14 +178,6 @@ void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotat
 		{
 			TempVelocity.Z += SpaceShipUpSpeed * PitchAngleScale;
 		}
-		/*
-		TempRotationVelocity.Pitch = SpaceShipPitchSpeed * InputPitchDirection;
-		NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
-		if(FMath::Abs(NextRotation.Pitch) > SpaceShipMaxPitchAngle)
-		{
-			NextRotation.Pitch = PitchDirection * SpaceShipMaxPitchAngle;
-		}
-		*/
 		PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, InputPitchDirection, DeltaTime, SpaceShipPitchSpeedScaleInterpSpeed);
 		const float NextTempVelocityY = TempVelocity.Y + SpaceShipRightSpeedBias * PitchAngleScale * RollAngleScale * RightSpeedBiasScale;
 		if(NextTempVelocityY * TempVelocity.Y < 0.0f) TempVelocity.Y = 0.0f;
@@ -172,6 +186,21 @@ void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotat
 	
 	TempRotationVelocity.Pitch = SpaceShipPitchSpeed * PitchScale;
 	NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+	
+	const float RandomScaleDir = SpaceShipPitchRandomScale > 0.0f? 1.0f: -1.0f;
+	if(bSpaceShipPitchNeedRandom && RandomScaleDir * NextRotation.Pitch > 0.0f && FMath::Abs(NextRotation.Pitch) > SpaceShipPitchRandomAngle)
+	{
+		bSpaceShipPitchNeedRandom = false;
+		NextRotation.Pitch = SpaceShipPitchRandomAngle * RandomScaleDir;
+	}
+	
+	if(FMath::Abs(NextRotation.Pitch) > SpaceShipPitchRandomMaxAngle)
+	{
+		bSpaceShipPitchNeedRandom = true;
+		SpaceShipPitchRandomScale = FMath::RandRange(SpaceShipPitchRandomMinScale, SpaceShipPitchRandomMaxScale) * -PitchDirection;
+		SpaceShipPitchRandomAngle = FMath::RandRange(SpaceShipPitchMinRandomAngle, SpaceShipPitchMaxRandomAngle);
+	}
+	
 	if(FMath::Abs(NextRotation.Pitch) > SpaceShipMaxPitchAngle)
 	{
 		NextRotation.Pitch = PitchDirection * SpaceShipMaxPitchAngle;

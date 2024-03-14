@@ -76,6 +76,8 @@ protected:
 	float SpaceShipPitchSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Up", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipPitchSpeedScaleCache;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Up", Meta = (AllowPrivateAccess = "true"))
+	bool bSpaceShipPitchNeedRandom;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipMaxPitchAngle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
@@ -100,7 +102,24 @@ protected:
 	float SpaceShipPitchSpeedScaleBackInterpSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipPitchSpeedScaleInterpSpeed;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomMaxPossibility;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomMaxAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomInterpSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomMinScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchRandomMaxScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchMinRandomAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipPitchMaxRandomAngle;
 public:
 	// Sets default values for this pawn's properties
 	ABaseSpaceShip();
