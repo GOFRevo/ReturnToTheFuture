@@ -21,15 +21,34 @@ ABaseSpaceShip::ABaseSpaceShip():
 	BackTime(0.0f),
 	MaxBackTime(2.0f),
 	BackForceCurve(nullptr),
+	//Right
 	SpaceShipCurrentRollScale(0.0f),
+	SpaceShipRollScaleCache(0.0f),
+	bSpaceShipRollNeedRandom(false),
+	SpaceShipRollRightSpeedScaleCache(1.0f),
+	SpaceShipRollRightSpeedScaleInterpSpeed(10.0f),
 	SpaceShipMaxRollAngle(20.0f),
 	SpaceShipMaxRollTime(0.5f),
+	SpaceShipUpSpeedBias(50.0f),
+	SpaceShipRollUpSpeedScale(2.0f),
 	SpaceShipRightSpeed(300.0f),
-	SpaceShipRightBackScale(1.0f),
-	SpaceShipBiasDistance(20.0f),
-	SpaceShipRollBackSpeedScale(1.0f),
-	SpaceShipRollBackSpeedAngleBias(0.1f),
 	SpaceShipAcceRollBackSpeedScale(2.0f),
+	SpaceShipRollBackSpeedScale(0.8f),
+	SpaceShipRollBackRightSpeedScale(2.0f),
+	SpaceShipRollBackUpSpeedScale(0.4f),
+	SpaceShipRollInverseUpSpeedScale(0.8f),
+	SpaceShipRollInverseRightSpeedScale(0.2f),
+	SpaceShipRollBackInterpSpeed(10.0f),
+	SpaceShipRollInterpSpeed(12.0f),
+	SpaceShipRollRandomScale(0.0f),
+	SpaceShipRollRandomDirection(0.0f),
+	SpaceShipRollRandomAngle(0.0f),
+	SpaceShipRollRandomOccurAngle(16.0f),
+	SpaceShipRollRandomInterpSpeed(12.0f),
+	SpaceShipRollRandomMinScale(1.0f),
+	SpaceShipRollRandomMaxScale(1.4f),
+	SpaceShipRollRandomMinAngle(4.0f),
+	SpaceShipRollRandomMaxAngle(8.0f),
 	//Up
 	SpaceShipCurrentPitchScale(0.0f),
 	SpaceShipPitchScaleCache(0.0f),
@@ -54,6 +73,7 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipPitchRandomMaxScale(1.4f),
 	SpaceShipPitchRandomMinAngle(2.0f),
 	SpaceShipPitchRandomMaxAngle(4.0f),
+	//Forward
 	SpaceShipAcceRightSpeedBias(40.0f)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -81,46 +101,80 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 void ABaseSpaceShip::UpdateRightMove(float DeltaTime, FVector& TempVelocity, FRotator& NextRotation)
 {
 	// Update Right Movement
-	FRotator TempRotationVelocity;
 	float InputRollDirection = SpaceShipCurrentRollScale;
 	const FRotator CurrentActorRotation = NextRotation;
-	const float CurrentRollAngle = MapRotationAngle(CurrentActorRotation.Roll);
-	const float AngleScale = FMath::Abs(CurrentRollAngle) / SpaceShipMaxRollAngle;
-	const float RollDirection = CurrentRollAngle < 0.0f? -1.0f: 1.0f;
-	const float RollSpeedScale = FMath::Abs(AngleScale) + SpaceShipRollBackSpeedAngleBias;
+
+	const float RollCurrentAngle = MapRotationAngle(CurrentActorRotation.Roll);
+	const float RollAngleScale = RollCurrentAngle / SpaceShipMaxRollAngle;
+	const float RollAngleAbsScale = FMath::Abs(RollAngleScale);
+	const float RollAngleInverseAbsScale = 1.0f - RollAngleAbsScale;
+	const float RollDirection = FRTFUtility::GetDirection(RollCurrentAngle);
+	
+	FRotator TempRotationVelocity{0.0f};
+	float RollScale = SpaceShipRollScaleCache;
+	float UpSpeedScale = SpaceShipRollUpSpeedScale * RollAngleInverseAbsScale;
+	float RightSpeedScale = SpaceShipRollRightSpeedScaleCache;
 	if(FMath::IsNearlyZero(InputRollDirection, 0.01f))
 	{
-		if(FMath::IsNearlyZero(CurrentRollAngle, 0.1f))
+		if(FMath::IsNearlyZero(RollCurrentAngle, 0.1f))
 		{
-			NextRotation.Roll = 0.0f;
+			if(bSpaceShipRollNeedRandom)
+			{
+				RollScale = UKismetMathLibrary::FInterpTo(RollScale, SpaceShipRollRandomScale,
+					 DeltaTime, SpaceShipRollRandomInterpSpeed);
+			}else
+			{
+				NextRotation.Roll = 0.0f;
+				RollScale = 0.0f;
+			}
+			UpSpeedScale = 0.0f;
+			RightSpeedScale = 0.0f;
 		}else
 		{
-			TempVelocity.Z -= SpaceShipBiasSpeed * SpaceShipRollBackSpeedScale * AngleScale;
-			TempVelocity.Y += SpaceShipRightSpeed * SpaceShipRightBackScale * SpaceShipRollBackSpeedScale * -RollDirection * AngleScale;
-			TempRotationVelocity.Roll = SpaceShipRollSpeed * SpaceShipRollBackSpeedScale * -RollDirection * RollSpeedScale;
-			NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+			if(bSpaceShipRollNeedRandom) RollScale = UKismetMathLibrary::FInterpTo(RollScale, SpaceShipRollRandomScale, DeltaTime, SpaceShipRollRandomInterpSpeed);
+			else RollScale = UKismetMathLibrary::FInterpTo(RollScale, -RollAngleScale * SpaceShipRollBackSpeedScale, DeltaTime, SpaceShipRollBackInterpSpeed);
+			RightSpeedScale = UKismetMathLibrary::FInterpTo(RightSpeedScale, SpaceShipRollBackRightSpeedScale, DeltaTime, SpaceShipRollRightSpeedScaleInterpSpeed);
+			UpSpeedScale = -SpaceShipRollBackUpSpeedScale * RollAngleAbsScale;
 		}
 	}else
 	{
-		if(InputRollDirection * CurrentRollAngle < 0.0f)
+		if(!FRTFUtility::IsSameMark(InputRollDirection, RollCurrentAngle))
 		{
 			InputRollDirection *= SpaceShipAcceRollBackSpeedScale;
-			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * 0.1f;
-			TempVelocity.Z += SpaceShipBiasSpeed * 0.4f;
-		}else
-		{
-			TempVelocity.Y += SpaceShipRightSpeed * InputRollDirection * AngleScale;
+			RightSpeedScale = UKismetMathLibrary::FInterpTo(RightSpeedScale, SpaceShipRollInverseRightSpeedScale, DeltaTime, SpaceShipRollRightSpeedScaleInterpSpeed);
+			UpSpeedScale = -SpaceShipRollInverseUpSpeedScale * RollAngleInverseAbsScale;
 		}
-		TempRotationVelocity.Roll = SpaceShipRollSpeed * InputRollDirection;
-		NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
-		if(FMath::Abs(MapRotationAngle(NextRotation.Roll)) < SpaceShipMaxRollAngle)
-		{
-			TempVelocity.Z += SpaceShipBiasSpeed * InputRollDirection * RollDirection * AngleScale;
-		}else
-		{
-			NextRotation.Roll = UnMapRotationAngle(NextRotation.Roll > 0.0f? SpaceShipMaxRollAngle: -SpaceShipMaxRollAngle);
-		}
+		RollScale = UKismetMathLibrary::FInterpTo(RollScale, InputRollDirection, DeltaTime, SpaceShipRollInterpSpeed);
 	}
+	TempVelocity.Z += SpaceShipUpSpeedBias * UpSpeedScale;
+	
+	TempVelocity.Y += SpaceShipRightSpeed * RollAngleScale * RightSpeedScale;
+	
+	TempRotationVelocity.Roll += SpaceShipRollSpeed * RollScale;
+	
+	NextRotation = CurrentActorRotation + (SpaceShipRotationVelocity + TempRotationVelocity) * DeltaTime;
+	
+	if(bSpaceShipRollNeedRandom && FRTFUtility::IsSameMark(SpaceShipRollRandomDirection, MapRotationAngle(NextRotation.Roll)) &&
+			FMath::Abs(MapRotationAngle(NextRotation.Roll)) > SpaceShipRollRandomAngle)
+	{
+		bSpaceShipRollNeedRandom = false;
+		NextRotation.Roll = UnMapRotationAngle(SpaceShipRollRandomAngle * SpaceShipRollRandomDirection);
+	}
+	
+	if(FMath::Abs(MapRotationAngle(NextRotation.Roll)) > SpaceShipRollRandomOccurAngle)
+	{
+		bSpaceShipRollNeedRandom = true;
+		SpaceShipRollRandomDirection = -RollDirection;
+		SpaceShipRollRandomScale = FMath::RandRange(SpaceShipRollRandomMinScale, SpaceShipRollRandomMaxScale) * SpaceShipRollRandomDirection;
+		SpaceShipRollRandomAngle = FMath::RandRange(SpaceShipRollRandomMinAngle, SpaceShipRollRandomMaxAngle);
+	}
+	
+	if(FMath::Abs(MapRotationAngle(NextRotation.Roll)) > SpaceShipMaxRollAngle)
+	{
+		NextRotation.Roll = UnMapRotationAngle(SpaceShipMaxRollAngle * RollDirection);
+	}
+	
+	SpaceShipRollScaleCache = RollScale;
 	SpaceShipCurrentRollScale = 0.0f;
 }
 
@@ -142,7 +196,7 @@ void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotat
 	float RightSpeedScale = 1.0f;
 	if(FMath::IsNearlyZero(InputPitchDirection, 0.01f))
 	{
-		if(FMath::IsNearlyZero(PitchCurrentAngle, 0.2f))
+		if(FMath::IsNearlyZero(PitchCurrentAngle, 0.1f))
 		{
 			if(bSpaceShipPitchNeedRandom)
 			{
@@ -159,11 +213,11 @@ void ABaseSpaceShip::UpdateUpMove(float DeltaTime, FVector& TempVelocity, FRotat
 		{
 			if(bSpaceShipPitchNeedRandom) PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, SpaceShipPitchRandomScale, DeltaTime, SpaceShipPitchRandomInterpSpeed);
 			else PitchScale = UKismetMathLibrary::FInterpTo(PitchScale, -PitchAngleScale * SpaceShipPitchBackSpeedScale, DeltaTime, SpaceShipPitchBackInterpSpeed);
-			UpSpeedScale = SpaceShipPitchBackSpeedScale;
+			UpSpeedScale = SpaceShipPitchBackUpSpeedScale;
 		}
 	}else
 	{
-		if(InputPitchDirection * PitchCurrentAngle < 0.0f)
+		if(!FRTFUtility::IsSameMark(InputPitchDirection, PitchCurrentAngle))
 		{
 			InputPitchDirection *= SpaceShipAccePitchBackSpeedScale;
 			UpSpeedScale = SpaceShipInverseUpSpeedScale;
@@ -270,7 +324,6 @@ void ABaseSpaceShip::BeginPlay()
 {
 	Super::BeginPlay();
 	SpaceShipRollSpeed = SpaceShipMaxRollAngle / SpaceShipMaxRollTime;
-	SpaceShipBiasSpeed = SpaceShipBiasDistance / SpaceShipMaxRollTime;
 	SpaceShipPitchSpeed = SpaceShipMaxPitchAngle / SpaceShipMaxPitchTime;
 }
 

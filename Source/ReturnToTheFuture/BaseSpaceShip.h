@@ -50,25 +50,59 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipCurrentRollScale;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipRollSpeed;	
+	float SpaceShipRollSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipBiasSpeed;
+	float SpaceShipRollScaleCache;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
+	bool bSpaceShipRollNeedRandom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRightSpeedScaleCache;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRightSpeedScaleInterpSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipMaxRollAngle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipMaxRollTime;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipUpSpeedBias;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollUpSpeedScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipRightSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipRightBackScale;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipBiasDistance;
+	float SpaceShipAcceRollBackSpeedScale;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipRollBackSpeedScale;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipRollBackSpeedAngleBias;
+	float SpaceShipRollBackRightSpeedScale;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipAcceRollBackSpeedScale;
+	float SpaceShipRollBackUpSpeedScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollInverseUpSpeedScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollInverseRightSpeedScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollBackInterpSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollInterpSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomScale;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomDirection;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomOccurAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomInterpSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomMinScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomMaxScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomMinAngle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Right", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipRollRandomMaxAngle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Up", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipCurrentPitchScale;
