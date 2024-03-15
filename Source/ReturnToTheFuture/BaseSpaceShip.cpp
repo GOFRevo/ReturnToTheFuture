@@ -12,6 +12,7 @@ ABaseSpaceShip::ABaseSpaceShip():
 	MaxForwardSpeed(500.0f),
 	SpaceShipVelocity(0.0f),
 	SpaceShipRotationVelocity(0.0f),
+	SpaceShipRealVelocity(0.0f),
 	bForward(false),
 	bForwardTimeDecrease(true),
 	ForwardTime(0.0f),
@@ -74,7 +75,14 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipPitchRandomMinAngle(2.0f),
 	SpaceShipPitchRandomMaxAngle(4.0f),
 	//Forward
-	SpaceShipAcceRightSpeedBias(40.0f)
+	SpaceShipAcceRightSpeedBiasCurve(nullptr),
+	SpaceShipAcceUpSpeedBiasCurve(nullptr),
+	SpaceShipDecceRightSpeedBiasCurve(nullptr),
+	SpaceShipDecceUpSpeedBiasCurve(nullptr),
+	SpaceShipForwardRightSpeedBias(0.0f),
+	SpaceShipForwardUpSpeedBias(0.0f),
+	SpaceShipForwardUpInterpSpeed(40.0f),
+	SpaceShipForwardRightInterpSpeed(80.0f)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -94,7 +102,8 @@ void ABaseSpaceShip::UpdateMove(float DeltaTime)
 	UpdateForwardMove(DeltaTime, TempVelocity, NextRotation);
 
 	const FVector CurrentActorLocation = GetActorLocation();
-	SetActorLocation(CurrentActorLocation + (SpaceShipVelocity + TempVelocity) * DeltaTime);
+	SpaceShipRealVelocity = SpaceShipVelocity + TempVelocity;
+	SetActorLocation(CurrentActorLocation + SpaceShipRealVelocity * DeltaTime);
 	SetActorRotation(NextRotation);
 }
 
@@ -291,15 +300,46 @@ void ABaseSpaceShip::UpdateForwardMove(float DeltaTime, FVector& TempVelocity, F
 		}
 	}
 
+	const float RollAngle = MapRotationAngle(NextRotation.Roll);
+	const float RollAngleScale = RollAngle / SpaceShipMaxRollAngle;
+	
+	const float PitchAngle = NextRotation.Pitch;
+	const float PitchAngleScale = PitchAngle / SpaceShipMaxPitchAngle;
+	
+	float TempAddZ = 0.0f;
+	float TempAddY = 0.0f;
 	if(bForward)
 	{
+		if(!FMath::IsNearlyZero(PitchAngle, 0.1f))
+		{
+			TempAddZ = PitchAngleScale * SpaceShipAcceUpSpeedBiasCurve->GetFloatValue(ForwardTime);
+			TempAddY = RollAngleScale * SpaceShipAcceRightSpeedBiasCurve->GetFloatValue(ForwardTime);
+		}
 		MoveForward(DeltaTime);
 	}
 
 	if(bBack)
 	{
+		if(!FMath::IsNearlyZero(PitchAngle, 0.1f))
+		{
+			TempAddZ = -PitchAngleScale * SpaceShipDecceUpSpeedBiasCurve->GetFloatValue(BackTime);
+			TempAddY = -RollAngleScale * SpaceShipDecceRightSpeedBiasCurve->GetFloatValue(BackTime);
+		}
 		MoveBack(DeltaTime);
 	}
+	/*
+	if(bForward || bBack)
+	{
+		float NextVelocityZ = TempVelocity.Z + TempAddZ;
+		float NextVelocityY = TempVelocity.Y + TempAddY;
+		if(FRTFUtility::IsSameMark(NextVelocityZ, TempVelocity.Z)) TempVelocity.Z = TempVelocityZ;
+		else TempVelocity.Z = 0.0f;
+	}
+	*/
+	SpaceShipForwardUpSpeedBias = UKismetMathLibrary::FInterpTo(SpaceShipForwardUpSpeedBias, TempAddZ, DeltaTime, SpaceShipForwardUpInterpSpeed);
+	SpaceShipForwardRightSpeedBias = UKismetMathLibrary::FInterpTo(SpaceShipForwardRightSpeedBias, TempAddY, DeltaTime, SpaceShipForwardRightInterpSpeed);
+	TempVelocity.Z += SpaceShipForwardUpSpeedBias;
+	TempVelocity.Y += SpaceShipForwardRightSpeedBias;
 }
 
 void ABaseSpaceShip::MoveForward(float DeltaTime)
@@ -393,6 +433,11 @@ float ABaseSpaceShip::RollAngleScale() const
 float ABaseSpaceShip::RollAngle() const
 {
 	return MapRotationAngle(GetActorRotation().Roll);
+}
+
+FVector ABaseSpaceShip::GetSpaceShipVelocity() const
+{
+	return SpaceShipRealVelocity;
 }
 
 bool ABaseSpaceShip::IsForwardAccelerating() const

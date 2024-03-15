@@ -27,6 +27,8 @@ protected:
 	FVector SpaceShipVelocity;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info", Meta = (AllowPrivateAccess = "true"))
 	FRotator SpaceShipRotationVelocity;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info", Meta = (AllowPrivateAccess = "true"))
+	FVector SpaceShipRealVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info", Meta = (AllowPrivateAccess = "true"))
 	bool bForward;
@@ -152,9 +154,23 @@ protected:
 	float SpaceShipPitchRandomMinAngle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Up", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipPitchRandomMaxAngle;
-	
+	//Forward	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
-	float SpaceShipAcceRightSpeedBias;
+	UCurveFloat* SpaceShipAcceRightSpeedBiasCurve;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* SpaceShipAcceUpSpeedBiasCurve;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* SpaceShipDecceRightSpeedBiasCurve;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* SpaceShipDecceUpSpeedBiasCurve;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Forward", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipForwardRightSpeedBias;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement Info|Forward", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipForwardUpSpeedBias;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipForwardUpInterpSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipForwardRightInterpSpeed;
 public:
 	// Sets default values for this pawn's properties
 	ABaseSpaceShip();
@@ -187,6 +203,8 @@ public:
 	float UnMapRotationAngle(float Angle) const;
 	float RollAngleScale() const;
 	float RollAngle() const;
+	UFUNCTION(BlueprintCallable)
+	FVector GetSpaceShipVelocity() const;
 
 	bool IsForwardAccelerating() const;
 };
