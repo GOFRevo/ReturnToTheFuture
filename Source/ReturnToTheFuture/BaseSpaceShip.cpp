@@ -82,7 +82,9 @@ ABaseSpaceShip::ABaseSpaceShip():
 	SpaceShipForwardRightSpeedBias(0.0f),
 	SpaceShipForwardUpSpeedBias(0.0f),
 	SpaceShipForwardUpInterpSpeed(40.0f),
-	SpaceShipForwardRightInterpSpeed(80.0f)
+	SpaceShipForwardRightInterpSpeed(80.0f),
+	SpaceShipForwardRightMaxSpeedBias(150.0f),
+	SpaceShipForwardUpMaxSpeedBias(150.0f)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -438,6 +440,51 @@ float ABaseSpaceShip::RollAngle() const
 FVector ABaseSpaceShip::GetSpaceShipVelocity() const
 {
 	return SpaceShipRealVelocity;
+}
+
+float ABaseSpaceShip::GetForwardTime() const
+{
+	return ForwardTime;
+}
+
+float ABaseSpaceShip::GetMaxForwardTime() const
+{
+	return MaxForwardTime;
+}
+
+float ABaseSpaceShip::GetForwardPercent() const
+{
+	return GetForwardTime() / GetMaxForwardTime();
+}
+
+float ABaseSpaceShip::GetRightVelocity() const
+{
+	return SpaceShipRealVelocity.Y;	
+}
+
+float ABaseSpaceShip::GetUpVelocity() const
+{
+	return SpaceShipRealVelocity.Z;	
+}
+
+float ABaseSpaceShip::GetRightVelocityPercent() const
+{
+	return GetRightVelocity() / GetRightMaxVelocity();
+}
+
+float ABaseSpaceShip::GetUpVelocityPercent() const
+{
+	return GetUpVelocity() / GetUpMaxVelocity();
+}
+
+float ABaseSpaceShip::GetRightMaxVelocity() const
+{
+	return SpaceShipRightSpeed + SpaceShipForwardRightMaxSpeedBias;
+}
+
+float ABaseSpaceShip::GetUpMaxVelocity() const
+{
+	return SpaceShipUpSpeed + SpaceShipForwardUpMaxSpeedBias;
 }
 
 bool ABaseSpaceShip::IsForwardAccelerating() const

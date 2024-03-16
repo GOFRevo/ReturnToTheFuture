@@ -171,6 +171,10 @@ protected:
 	float SpaceShipForwardUpInterpSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipForwardRightInterpSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipForwardRightMaxSpeedBias;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties|Forward", Meta = (AllowPrivateAccess = "true"))
+	float SpaceShipForwardUpMaxSpeedBias;
 public:
 	// Sets default values for this pawn's properties
 	ABaseSpaceShip();
@@ -205,6 +209,24 @@ public:
 	float RollAngle() const;
 	UFUNCTION(BlueprintCallable)
 	FVector GetSpaceShipVelocity() const;
+	UFUNCTION(BlueprintCallable)
+	float GetForwardTime() const;
+	UFUNCTION(BlueprintCallable)
+	float GetMaxForwardTime() const;
+	UFUNCTION(BlueprintCallable)
+	float GetForwardPercent() const;
+	UFUNCTION(BlueprintCallable)
+	float GetRightVelocity() const;
+	UFUNCTION(BlueprintCallable)
+	float GetUpVelocity() const;
+	UFUNCTION(BlueprintCallable)
+	float GetRightVelocityPercent() const;
+	UFUNCTION(BlueprintCallable)
+	float GetUpVelocityPercent() const;
+	UFUNCTION(BlueprintCallable)
+	float GetRightMaxVelocity() const;
+	UFUNCTION(BlueprintCallable)
+	float GetUpMaxVelocity() const;
 
 	bool IsForwardAccelerating() const;
 };
