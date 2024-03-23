@@ -1,4 +1,4 @@
 1. 实现FFT替换现成方案(单独起线程或compute shader)
 2. Reader实现可加载并渲染文字(epub或自定义格式)
-3. Music Radio可加载mp3格式
+3. Music Radio可加载mp3格式，对加载wav文件做个缓存以加速
 4. 加载信息先用json，若无法满足性能，则更换其他(BSON、Protobuf)

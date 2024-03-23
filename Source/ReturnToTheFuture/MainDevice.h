@@ -23,4 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void Init(bool bStart);
+	virtual void Start();
+	virtual void End();
 };

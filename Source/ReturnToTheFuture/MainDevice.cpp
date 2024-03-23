@@ -22,6 +22,21 @@ void AMainDevice::BeginPlay()
 void AMainDevice::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+
+void AMainDevice::Init(bool bStart)
+{
+}
+
+void AMainDevice::Start()
+{
+}
+
+void AMainDevice::End()
+{
+	
+}
+
+
+
 

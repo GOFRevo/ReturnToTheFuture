@@ -30,9 +30,3 @@ float FRTFUtility::GetDirection(const float Num)
 {
 	return Num > 0.0f? 1.0f: -1.0f;
 }
-
-
-
-
-
-

@@ -18,8 +18,6 @@ AMainSpaceShip::AMainSpaceShip():
 void AMainSpaceShip::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *FPaths::ProjectModsDir());
 	SpaceShipCameraMinFOV = SpaceShipFOVCurve->GetFloatValue(MaxForwardTime);
 	SpaceShipCameraFOV = SpaceShipCameraMinFOV;
 }

@@ -13,5 +13,16 @@ UCLASS()
 class RETURNTOTHEFUTURE_API AMainRadio : public AMainDevice
 {
 	GENERATED_BODY()
-	
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", Meta = (AllowPrivateAccess = "true"))
+	UAudioComponent* Audio;
+public:
+	AMainRadio();
+
+	virtual void Init(bool bStart) override;
+	virtual void Start() override;
+	virtual void End() override;
+	virtual void Play(bool bNew);
+	virtual void Stop();
 };
