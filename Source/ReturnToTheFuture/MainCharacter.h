@@ -11,6 +11,8 @@
  * 
  */
 class AMainSpaceShip;
+class AMainRadio;
+class AMainMusicRadio;
 UCLASS()
 class RETURNTOTHEFUTURE_API AMainCharacter : public ABaseCharacter
 {
@@ -46,6 +48,10 @@ public:
 	void AttachToSpaceShip(AMainSpaceShip* SpaceShip);
 	void DetachFromSpaceShip(AMainSpaceShip* SpaceShip);
 	FTransform GetIFPivotTargetTransform() const;
+	void ChangeMusicRadioChannel(AMainMusicRadio* MusicRadio, bool bOrder);
+	void ChangeMusicRadioMusic(AMainMusicRadio* MusicRadio, bool bOrder);
+	void StopRadio(AMainRadio* Radio);
+	void PlayRadio(AMainRadio* Radio);
 
 	bool IsOnSpaceShip() const;
 };

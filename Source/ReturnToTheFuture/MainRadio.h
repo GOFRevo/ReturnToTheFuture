@@ -25,4 +25,6 @@ public:
 	virtual void CloseDevice() override;
 	virtual void Play();
 	virtual void Stop();
+
+	virtual bool IsPlaying();
 };

@@ -3,11 +3,13 @@
 
 #include "MainSpaceShip.h"
 #include "MainCharacter.h"
+#include "MainMusicRadio.h"
 #include "RTFCameraManager.h"
 #include "Kismet/KismetMathLibrary.h"
 
 AMainSpaceShip::AMainSpaceShip():
 	SpaceShipFOVCurve(nullptr),
+	MainMusicRadio(nullptr),
 	MainCharacter(nullptr),
 	SpaceShipCameraFOV(0.0f),
 	SpaceShipCameraMinFOV(0.0f),
@@ -32,6 +34,12 @@ AMainCharacter* AMainSpaceShip::GetMainCharacter() const
 {
 	if(MainCharacter != nullptr) return MainCharacter;
 	return CastChecked<AMainCharacter>(CastChecked<UChildActorComponent>(GetRootComponent()->GetChildComponent(0))->GetChildActor());
+}
+
+AMainMusicRadio* AMainSpaceShip::GetMainMusicRadio() const
+{
+	if(MainMusicRadio != nullptr) return MainMusicRadio;
+	return CastChecked<AMainMusicRadio>(CastChecked<UChildActorComponent>(GetRootComponent()->GetChildComponent(1))->GetChildActor());
 }
 
 void AMainSpaceShip::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)

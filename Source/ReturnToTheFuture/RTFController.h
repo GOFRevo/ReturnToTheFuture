@@ -52,6 +52,16 @@ private:
 	TObjectPtr<UInputAction> IA_LookUp;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> IA_EPressed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_LeftArrowPressed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_RightArrowPressed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_UpArrowPressed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_DownArrowPressed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Input|Action", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> IA_PPressed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller Properties|SpaceShip", Meta = (AllowPrivateAccess = "true"))
 	float SpaceShipLookUpRate;
@@ -150,6 +160,16 @@ public:
 	void OnLookUp(const FInputActionValue& InputActionValue);
 	UFUNCTION()
 	void OnEPressed();
+	UFUNCTION()
+	void OnLeftArrowPressed();
+	UFUNCTION()
+	void OnRightArrowPressed();
+	UFUNCTION()
+	void OnUpArrowPressed();
+	UFUNCTION()
+	void OnDownArrowPressed();
+	UFUNCTION()
+	void OnPPressed();
 
 	void ToSpaceShipControl();
 	void ToITControl();

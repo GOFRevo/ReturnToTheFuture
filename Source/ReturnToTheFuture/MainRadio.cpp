@@ -30,3 +30,8 @@ void AMainRadio::Play()
 void AMainRadio::Stop()
 {
 }
+
+bool AMainRadio::IsPlaying()
+{
+	return false;
+}

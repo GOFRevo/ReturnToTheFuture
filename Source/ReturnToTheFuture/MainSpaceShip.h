@@ -16,6 +16,8 @@ class RETURNTOTHEFUTURE_API AMainSpaceShip : public ABaseSpaceShip
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Properties", Meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SpaceShipFOVCurve;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Device", Meta = (AllowPrivateAccess = "true"))
+	class AMainMusicRadio* MainMusicRadio;
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpaceShip Info", Meta = (AllowPrivateAccess = "true"))
 	class AMainCharacter* MainCharacter;
@@ -32,6 +34,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	AMainCharacter* GetMainCharacter() const;
+	UFUNCTION(BlueprintCallable)
+	AMainMusicRadio* GetMainMusicRadio() const;
 	
 	virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
 	void InitMainSpaceShipInfo();

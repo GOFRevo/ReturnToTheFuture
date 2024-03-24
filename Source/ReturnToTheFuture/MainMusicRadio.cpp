@@ -45,22 +45,21 @@ void UMusicData::LoadMusic(const FString& MusicPath, bool AutoStart)
 
 void UMusicData::MusicTick(float DeltaTime)
 {
-	if(bIsPlaying && bIsValid) StartTime += DeltaTime;
+	if(IsPlaying() && IsValid()) StartTime += DeltaTime;
 }
 
 void UMusicData::Play(){
-	if(bIsPlaying) return;
-	while(!bIsValid) std::this_thread::yield();
-	AudioComp->SetWaveParameter(TEXT("Music"), SoundWave);
-	AudioComp->SetFloatParameter(TEXT("TotalTime"), TotalTime);
+	if(IsPlaying()) return;
+	while(!IsValid()) std::this_thread::yield();
 	AudioComp->SetFloatParameter(TEXT("StartTime"), StartTime);
+	AudioComp->SetWaveParameter(TEXT("Music"), SoundWave);
 	AudioComp->Play();
 	bIsPlaying = true;
 }
 
 void UMusicData::Stop()
 {
-	if(!bIsPlaying || !bIsValid) return;
+	if(!IsPlaying() || !IsValid()) return;
 	bIsPlaying = false;
 	AudioComp->Stop();
 }
@@ -72,10 +71,10 @@ void UMusicData::ClearState()
 
 void UMusicData::ClearResource()
 {
+	bIsValid = false;
 	ClearState();
 	bAutoStart = false;
 	bIsPlaying = false;
-	bIsValid = false;
 	TotalTime = 0.0f;
 }
 
@@ -106,6 +105,7 @@ void AMainMusicRadio::Tick(float DeltaTime)
 
 void AMainMusicRadio::Init(bool bAutoStart)
 {
+	
 }
 
 void AMainMusicRadio::OpenDevice()
@@ -118,10 +118,14 @@ void AMainMusicRadio::CloseDevice()
 
 void AMainMusicRadio::Play()
 {
+	if(!IsValid()) return;
+	MusicData->Play();
 }
 
 void AMainMusicRadio::Stop()
 {
+	if(!IsValid()) return;
+	MusicData->Stop();
 }
 
 bool AMainMusicRadio::FindChannelOfMusic(bool bOrder, bool bCacheMusicOfChannel){
@@ -165,24 +169,52 @@ void AMainMusicRadio::ModLastChannelModIndex()
 	ChannelIndex = ChannelIndex == 0? ChannelName.Num() - 1: ChannelIndex - 1;
 }
 
-void AMainMusicRadio::ChangeSong(bool bOrder)
+void AMainMusicRadio::ChangeMusic(bool bOrder)
 {
-	if(!bIsValid) return;
+	if(!IsValid()) return;
+	const bool bAutoStart = PreLoadNewMusic();
+	
 	if(bOrder)
 	{
-		if(GetNextMusicModIndex() == 0) FindChannelOfMusic(true, false);
 		MusicIndex = GetNextMusicModIndex();
+		if(MusicIndex == 0)
+		{
+			MusicOfChannelCache[ChannelIndex] = 0;
+			FindChannelOfMusic(true, false);
+		}
 	}else
 	{
-		if(GetLastMusicModIndex() == MusicFullName.Num() - 1) FindChannelOfMusic(false, false);
+		if(MusicIndex == 0)
+		{
+			MusicOfChannelCache[ChannelIndex] = 0;
+			FindChannelOfMusic(false, false);
+		}
 		MusicIndex = GetLastMusicModIndex();
 	}
+
+	PostLoadNewMusic(bAutoStart);
 }
 
 void AMainMusicRadio::ChangeChannel(bool bOrder)
 {
-	if(!bIsValid) return;
+	if(!IsValid()) return;
+	const bool bAutoStart = PreLoadNewMusic();
 	FindChannelOfMusic(bOrder, true);
+	PostLoadNewMusic(bAutoStart);
+}
+
+bool AMainMusicRadio::PreLoadNewMusic()
+{
+	const bool bNewAutoStart = MusicData->IsPlaying();
+	Stop();
+	MusicData->ClearResource();
+	return bNewAutoStart;
+}
+
+void AMainMusicRadio::PostLoadNewMusic(bool bAutoStart)
+{
+	const FString MusicPath = MusicFolderPath / ChannelName[ChannelIndex] / MusicFullName[MusicIndex];
+	MusicData->LoadMusic(MusicPath, bAutoStart);
 }
 
 bool AMainMusicRadio::LoadChannels()

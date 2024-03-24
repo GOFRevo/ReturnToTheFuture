@@ -7,6 +7,7 @@
 #include "RTFCameraManager.h"
 #include "RTFUtility.h"
 #include "Components/CapsuleComponent.h"
+#include "MainMusicRadio.h"
 
 ARTFController::ARTFController():
 	MainSpaceShip(nullptr),
@@ -125,6 +126,31 @@ void ARTFController::SetupInputComponent()
 		if(IA_EPressed)
 		{
 			enhancedInputComponent->BindAction(IA_EPressed, ETriggerEvent::Triggered, this, &ARTFController::OnEPressed);
+		}
+
+		if(IA_LeftArrowPressed)
+		{
+			enhancedInputComponent->BindAction(IA_LeftArrowPressed, ETriggerEvent::Triggered, this, &ARTFController::OnLeftArrowPressed);
+		}
+		
+		if(IA_RightArrowPressed)
+		{
+			enhancedInputComponent->BindAction(IA_RightArrowPressed, ETriggerEvent::Triggered, this, &ARTFController::OnRightArrowPressed);
+		}
+
+		if(IA_UpArrowPressed)
+		{
+			enhancedInputComponent->BindAction(IA_UpArrowPressed, ETriggerEvent::Triggered, this, &ARTFController::OnUpArrowPressed);
+		}
+		
+		if(IA_DownArrowPressed)
+		{
+			enhancedInputComponent->BindAction(IA_DownArrowPressed, ETriggerEvent::Triggered, this, &ARTFController::OnDownArrowPressed);
+		}
+
+		if(IA_PPressed)
+		{
+			enhancedInputComponent->BindAction(IA_PPressed, ETriggerEvent::Triggered, this, &ARTFController::OnPPressed);
 		}
 	}
 }
@@ -374,6 +400,33 @@ void ARTFController::OnEPressed()
 		ToITControl();
 		return;
 	}
+}
+
+void ARTFController::OnLeftArrowPressed()
+{
+	MainCharacter->ChangeMusicRadioMusic(MainSpaceShip->GetMainMusicRadio(), false);
+}
+
+void ARTFController::OnRightArrowPressed()
+{
+	MainCharacter->ChangeMusicRadioMusic(MainSpaceShip->GetMainMusicRadio(), true);
+}
+
+void ARTFController::OnUpArrowPressed()
+{
+	MainCharacter->ChangeMusicRadioChannel(MainSpaceShip->GetMainMusicRadio(), false);
+}
+
+void ARTFController::OnDownArrowPressed()
+{
+	MainCharacter->ChangeMusicRadioChannel(MainSpaceShip->GetMainMusicRadio(), true);
+}
+
+void ARTFController::OnPPressed()
+{
+	AMainMusicRadio* MusicRadio = MainSpaceShip->GetMainMusicRadio();
+	if(MusicRadio->IsPlaying()) MusicRadio->Stop();
+	else MusicRadio->Play();
 }
 
 void ARTFController::ViewOnTurn(const float InputScale, const float TurnRate, const bool bDeadZone, const float DeadZoneAngle, const float DeadZoneRate, const float MaxAngle)

@@ -13,7 +13,6 @@
 UCLASS()
 class UMusicData: public UObject
 {
-	friend class AMainMusicRadio;
 	GENERATED_BODY()
 private:
 	UPROPERTY()
@@ -60,6 +59,9 @@ public:
 	void ClearState();
 	//Use For LoadMusic 
 	void ClearResource();
+
+	bool IsValid() const { return bIsValid; }
+	bool IsPlaying() const { return bIsPlaying; }
 };
 
 UCLASS()
@@ -82,6 +84,9 @@ private:
 public:
 	AMainMusicRadio();
 
+	bool IsValid() const{ return bIsValid && MusicData->IsValid(); }
+	virtual bool IsPlaying() override{ return MusicData->IsPlaying(); }
+
 	void BeginPlay() override;
 	void Tick(float DeltaTime) override;
 
@@ -98,8 +103,10 @@ public:
 	void ModNextChannelModIndex();
 	void ModLastChannelModIndex();
 	
-	void ChangeSong(bool bOrder);
+	void ChangeMusic(bool bOrder);
 	void ChangeChannel(bool bOrder);
+	bool PreLoadNewMusic();
+	void PostLoadNewMusic(bool bAutoStart);
 	
 	bool LoadChannels();
 	bool LoadMusicsFromChannel();

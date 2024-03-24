@@ -2,6 +2,7 @@
 
 
 #include "MainCharacter.h"
+#include "MainMusicRadio.h"
 #include "RTFCameraManager.h"
 #include "MainSpaceShip.h"
 #include "Components/CapsuleComponent.h"
@@ -102,6 +103,26 @@ void AMainCharacter::DetachFromSpaceShip(AMainSpaceShip* SpaceShip)
 FTransform AMainCharacter::GetIFPivotTargetTransform() const
 {
 	return IFCameraPivotTarget->GetComponentTransform();
+}
+
+void AMainCharacter::ChangeMusicRadioChannel(AMainMusicRadio* MusicRadio, bool bOrder)
+{
+	MusicRadio->ChangeChannel(bOrder);
+}
+
+void AMainCharacter::ChangeMusicRadioMusic(AMainMusicRadio* MusicRadio, bool bOrder)
+{
+	MusicRadio->ChangeMusic(bOrder);
+}
+
+void AMainCharacter::StopRadio(AMainRadio* Radio)
+{
+	Radio->Stop();
+}
+
+void AMainCharacter::PlayRadio(AMainRadio* Radio)
+{
+	Radio->Play();
 }
 
 bool AMainCharacter::IsOnSpaceShip() const
