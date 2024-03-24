@@ -23,7 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void Init(bool bStart);
-	virtual void Start();
-	virtual void End();
+	virtual void Init(bool bAutoStart);
+	virtual void OpenDevice();
+	virtual void CloseDevice();
 };

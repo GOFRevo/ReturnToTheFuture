@@ -4,21 +4,62 @@
 
 #include "CoreMinimal.h"
 #include "MainRadio.h"
+#include "RuntimeAudioImporterLibrary.h"
 #include "MainMusicRadio.generated.h"
 
 /**
  * 
  */
-USTRUCT(Blueprintable)
-struct FSongData
+UCLASS()
+class UMusicData: public UObject
 {
+	friend class AMainMusicRadio;
 	GENERATED_BODY()
-
+private:
 	UPROPERTY()
-	USoundWave* SoundWave = nullptr;
-	bool bIsOn = false;
-	float StartTime = 0.0f;
-	float TotalTime = 0.0f;
+	FOnPrepareSoundWaveForMetaSoundsResult OnMetaResultDelegate;
+	UPROPERTY()
+	UImportedSoundWave* SoundWave;
+	UPROPERTY()
+	URuntimeAudioImporterLibrary* RuntimeImporter;
+	UPROPERTY()
+	UAudioComponent* AudioComp;
+	bool bAutoStart;
+	TAtomic<bool> bIsPlaying;
+	TAtomic<bool> bIsValid;
+	float StartTime;
+	float TotalTime;
+private:
+	UFUNCTION()
+	void OnLoadResult(URuntimeAudioImporterLibrary* Importer, UImportedSoundWave* ImportedSoundWave, ERuntimeImportStatus Status)
+	{
+		if(Status != ERuntimeImportStatus::SuccessfulImport) return;
+		SoundWave = ImportedSoundWave;
+		ImportedSoundWave->PrepareSoundWaveForMetaSounds(OnMetaResultDelegate);
+	}
+	UFUNCTION()
+	void OnMetaResult(bool bSuccess)
+	{
+		if(!bSuccess) return;
+		StartTime = 0.0f;
+		TotalTime = SoundWave->GetDuration();
+		bIsValid = true;
+		FPlatformMisc::MemoryBarrier();
+		if(bAutoStart) Play();
+	}
+	void Init(const FString& MusicPath, UAudioComponent* Audio, bool AutoStart);
+public:
+	UMusicData();
+	static UMusicData* CreateMusicData(const FString& MusicPath, UAudioComponent* Audio, bool AutoStart);
+	void LoadMusic(const FString& MusicPath, bool AutoStart);
+	// Only In Actor::Tick Is Useful!
+	void MusicTick(float DeltaTime);
+	void Play();
+	void Stop();
+	//Use For ReStart Play
+	void ClearState();
+	//Use For LoadMusic 
+	void ClearResource();
 };
 
 UCLASS()
@@ -26,43 +67,40 @@ class RETURNTOTHEFUTURE_API AMainMusicRadio : public AMainRadio
 {
 	GENERATED_BODY()
 private:
+	bool bIsValid;
 	FString MusicFolderPath;
-
-	bool bGood;
+	
 	TArray<FString> ChannelName;
-	TArray<uint64_t> ChannelChangeIndex;
-	uint64_t CurrentChannelIndex;
-	TArray<FString> SongPath;
-	uint64_t CurrentSongIndex;
+	TArray<uint64_t> MusicOfChannelCache;
+	uint64_t ChannelIndex;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SongData", Meta = (AllowPrivateAccess = "true"))
-	FSongData SongData;
+	TArray<FString> MusicFullName;
+	uint64_t MusicIndex;
+	
+	UPROPERTY()
+	UMusicData* MusicData;
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USoundWave* Debug;
-	
 	AMainMusicRadio();
 
 	void BeginPlay() override;
 	void Tick(float DeltaTime) override;
 
-	void Init(bool bStart) override;
-	void Start() override;
-	void End() override;
-	void Play(bool bNew) override;
+	void Init(bool bAutoStart) override;
+	void OpenDevice() override;
+	void CloseDevice() override;
+	
+	void Play() override;
 	void Stop() override;
 	
-	void ChangeSongImpl(bool bNext);
-	bool ChangeChannelImpl(bool bNext, bool bChangeSongIndex);
-	uint64_t ModNextSongIndex() const;
-	void ModNextChannelIndex();
-	uint64_t ModLastSongIndex() const;
-	void ModLastChannelIndex();
+	bool FindChannelOfMusic(bool bOrder, bool bChangeSongIndex);
+	uint64_t GetNextMusicModIndex() const;
+	uint64_t GetLastMusicModIndex() const;
+	void ModNextChannelModIndex();
+	void ModLastChannelModIndex();
 	
-	void ChangeSong(bool bNext);
-	void ChangeChannel(bool bNext);
+	void ChangeSong(bool bOrder);
+	void ChangeChannel(bool bOrder);
 	
 	bool LoadChannels();
-	bool LoadSongFromChannel();
-	bool LoadSongData();
+	bool LoadMusicsFromChannel();
 };

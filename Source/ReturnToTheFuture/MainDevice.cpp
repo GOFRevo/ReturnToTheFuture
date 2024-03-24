@@ -24,15 +24,15 @@ void AMainDevice::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AMainDevice::Init(bool bStart)
+void AMainDevice::Init(bool bAutoStart)
 {
 }
 
-void AMainDevice::Start()
+void AMainDevice::OpenDevice()
 {
 }
 
-void AMainDevice::End()
+void AMainDevice::CloseDevice()
 {
 	
 }

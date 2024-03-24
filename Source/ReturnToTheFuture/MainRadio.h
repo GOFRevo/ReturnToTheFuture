@@ -20,9 +20,9 @@ protected:
 public:
 	AMainRadio();
 
-	virtual void Init(bool bStart) override;
-	virtual void Start() override;
-	virtual void End() override;
-	virtual void Play(bool bNew);
+	virtual void Init(bool bAutoStart) override;
+	virtual void OpenDevice() override;
+	virtual void CloseDevice() override;
+	virtual void Play();
 	virtual void Stop();
 };

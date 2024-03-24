@@ -17,6 +17,7 @@ void DebugInfoOfSoundWave(USoundWave* SoundWave)
 #endif
 
 USoundWave* FRTFLoader::LoadSoundWaveFromFile(const FString& FilePath){
+	/*
 	USoundWaveProcedural* NewSoundWave = NewObject<USoundWaveProcedural>();
 	if (NewSoundWave == nullptr) return nullptr;
 	
@@ -25,11 +26,18 @@ USoundWave* FRTFLoader::LoadSoundWaveFromFile(const FString& FilePath){
 	
 	FWaveModInfo WaveInfo;
 	if (!WaveInfo.ReadWaveInfo(RawData.GetData(), RawData.Num())) return nullptr;
-	
+
+	NewSoundWave->QueueAudio(WaveInfo.SampleDataStart, WaveInfo.SampleDataSize);
 	NewSoundWave->Duration = *WaveInfo.pWaveDataSize * 8.0f / (*WaveInfo.pChannels * *WaveInfo.pBitsPerSample * *WaveInfo.pSamplesPerSec);
+	NewSoundWave->SetSampleRate(*WaveInfo.pSamplesPerSec);
 	NewSoundWave->NumChannels = *WaveInfo.pChannels;
 	NewSoundWave->DecompressionType = DTYPE_Procedural;
-	NewSoundWave->QueueAudio(RawData.GetData(), RawData.Num());
-	NewSoundWave->SetSampleRate(*WaveInfo.pSamplesPerSec);
+	NewSoundWave->TotalSamples = *WaveInfo.pSamplesPerSec * NewSoundWave->Duration;
+	NewSoundWave->SetSoundAssetCompressionType(ESoundAssetCompressionType::PCM);
+	NewSoundWave->PostImport();
 	return NewSoundWave;
+	*/
+	return nullptr;
+
+	
 }

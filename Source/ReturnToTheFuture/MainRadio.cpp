@@ -10,22 +10,20 @@ AMainRadio::AMainRadio()
 	SetRootComponent(Audio);
 }
 
-void AMainRadio::Init(bool bStart)
+void AMainRadio::Init(bool bAutoStart)
 {
-	Super::Init(bStart);
+	Super::Init(bAutoStart);
 }
 
-void AMainRadio::Start()
+void AMainRadio::OpenDevice()
 {
-	Super::Start();
 }
 
-void AMainRadio::End()
+void AMainRadio::CloseDevice()
 {
-	Super::End();
 }
 
-void AMainRadio::Play(bool bNew)
+void AMainRadio::Play()
 {
 }
 
