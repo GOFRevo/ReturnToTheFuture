@@ -2,83 +2,11 @@
 
 
 #include "MainMusicRadio.h"
-
-#include <thread>
-
-#include "Components/AudioComponent.h"
 #include "RTFInfo.h"
-
-UMusicData::UMusicData():
-	SoundWave(nullptr),
-	RuntimeImporter(nullptr),
-	AudioComp(nullptr),
-	bAutoStart(false),
-	bIsPlaying(false),
-	bIsValid(false),
-	StartTime(0.0f),
-	TotalTime(0.0f)
-{}
-
-void UMusicData::Init(const FString& MusicPath, UAudioComponent* Audio, bool AutoStart)
-{
-	check(Audio != nullptr)
-	AudioComp = Audio;
-	RuntimeImporter = URuntimeAudioImporterLibrary::CreateRuntimeAudioImporter();
-	RuntimeImporter->OnResult.AddDynamic(this, &UMusicData::OnLoadResult);
-	OnMetaResultDelegate.BindDynamic(this, &UMusicData::OnMetaResult);
-
-	LoadMusic(MusicPath, AutoStart);
-}
-
-UMusicData* UMusicData::CreateMusicData(const FString& MusicPath, UAudioComponent* Audio, bool AutoStart)
-{
-	UMusicData* Result = NewObject<UMusicData>();
-	Result->Init(MusicPath, Audio, AutoStart);
-	return Result;
-}
-
-void UMusicData::LoadMusic(const FString& MusicPath, bool AutoStart)
-{
-	bAutoStart = AutoStart;
-	RuntimeImporter->ImportAudioFromFile(MusicPath, ERuntimeAudioFormat::Auto);
-}
-
-void UMusicData::MusicTick(float DeltaTime)
-{
-	if(IsPlaying() && IsValid()) StartTime += DeltaTime;
-}
-
-void UMusicData::Play(){
-	if(IsPlaying()) return;
-	while(!IsValid()) std::this_thread::yield();
-	AudioComp->SetFloatParameter(TEXT("StartTime"), StartTime);
-	AudioComp->SetWaveParameter(TEXT("Music"), SoundWave);
-	AudioComp->Play();
-	bIsPlaying = true;
-}
-
-void UMusicData::Stop()
-{
-	if(!IsPlaying() || !IsValid()) return;
-	bIsPlaying = false;
-	AudioComp->Stop();
-}
-
-void UMusicData::ClearState()
-{
-	StartTime = 0.0f;
-}
-
-void UMusicData::ClearResource()
-{
-	bIsValid = false;
-	ClearState();
-	bAutoStart = false;
-	bIsPlaying = false;
-	TotalTime = 0.0f;
-}
+#include "MusicData.h"
 
 AMainMusicRadio::AMainMusicRadio():
+	MusicRadioState(EMusicRadioState::EMRS_Opened),
 	bIsValid(false),
 	ChannelIndex(0),
 	MusicIndex(0),
@@ -93,19 +21,34 @@ void AMainMusicRadio::BeginPlay()
 	
 	bIsValid = LoadChannels() && LoadMusicsFromChannel() && FindChannelOfMusic(true, false);
 	if(!bIsValid) return;
-
-	const FString MusicPath = MusicFolderPath / ChannelName[ChannelIndex] / MusicFullName[MusicIndex];
-	MusicData = UMusicData::CreateMusicData(MusicPath, Audio, true);
+	
+	MusicData = UMusicData::CreateMusicData(Audio);
+	
+	MusicData->SetValid(true);
+	PostLoadNewMusic(true);
 }
 
 void AMainMusicRadio::Tick(float DeltaTime)
 {
 	MusicData->MusicTick(DeltaTime);
+	if(MusicData->HasComplete())
+	{
+		MusicData->Stop();
+		MusicData->ClearResource();
+		UE_LOG(LogTemp, Warning, TEXT("Next"))
+		MusicIndex = GetNextMusicModIndex();
+		if(MusicIndex == 0)
+		{
+			MusicOfChannelCache[ChannelIndex] = 0;
+			FindChannelOfMusic(true, false);
+		}
+		MusicData->SetValid(true);
+		PostLoadNewMusic(true);
+	}
 }
 
 void AMainMusicRadio::Init(bool bAutoStart)
 {
-	
 }
 
 void AMainMusicRadio::OpenDevice()
@@ -192,6 +135,7 @@ void AMainMusicRadio::ChangeMusic(bool bOrder)
 		MusicIndex = GetLastMusicModIndex();
 	}
 
+	MusicData->SetValid(true);
 	PostLoadNewMusic(bAutoStart);
 }
 
@@ -200,6 +144,7 @@ void AMainMusicRadio::ChangeChannel(bool bOrder)
 	if(!IsValid()) return;
 	const bool bAutoStart = PreLoadNewMusic();
 	FindChannelOfMusic(bOrder, true);
+	MusicData->SetValid(true);
 	PostLoadNewMusic(bAutoStart);
 }
 
@@ -232,3 +177,14 @@ bool AMainMusicRadio::LoadMusicsFromChannel()
 	FileManager.FindFiles(MusicFullName, *(MusicFolderPath / ChannelName[ChannelIndex] / "*.wav"), true, false);
 	return !MusicFullName.IsEmpty();
 }
+
+bool AMainMusicRadio::IsPlaying()
+{
+	return MusicData->IsPlaying();
+}
+
+bool AMainMusicRadio::IsOpened()
+{
+	return MusicRadioState == EMusicRadioState::EMRS_Opened;
+}
+

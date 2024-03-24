@@ -27,4 +27,5 @@ public:
 	virtual void Stop();
 
 	virtual bool IsPlaying();
+	virtual bool IsOpened();
 };

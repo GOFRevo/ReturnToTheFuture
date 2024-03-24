@@ -35,3 +35,8 @@ bool AMainRadio::IsPlaying()
 {
 	return false;
 }
+
+bool AMainRadio::IsOpened()
+{
+	return false;
+}

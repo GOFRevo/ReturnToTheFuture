@@ -4,71 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "MainRadio.h"
-#include "RuntimeAudioImporterLibrary.h"
+#include "MusicRadioEnums.h"
 #include "MainMusicRadio.generated.h"
-
 /**
  * 
  */
-UCLASS()
-class UMusicData: public UObject
-{
-	GENERATED_BODY()
-private:
-	UPROPERTY()
-	FOnPrepareSoundWaveForMetaSoundsResult OnMetaResultDelegate;
-	UPROPERTY()
-	UImportedSoundWave* SoundWave;
-	UPROPERTY()
-	URuntimeAudioImporterLibrary* RuntimeImporter;
-	UPROPERTY()
-	UAudioComponent* AudioComp;
-	bool bAutoStart;
-	TAtomic<bool> bIsPlaying;
-	TAtomic<bool> bIsValid;
-	float StartTime;
-	float TotalTime;
-private:
-	UFUNCTION()
-	void OnLoadResult(URuntimeAudioImporterLibrary* Importer, UImportedSoundWave* ImportedSoundWave, ERuntimeImportStatus Status)
-	{
-		if(Status != ERuntimeImportStatus::SuccessfulImport) return;
-		SoundWave = ImportedSoundWave;
-		ImportedSoundWave->PrepareSoundWaveForMetaSounds(OnMetaResultDelegate);
-	}
-	UFUNCTION()
-	void OnMetaResult(bool bSuccess)
-	{
-		if(!bSuccess) return;
-		StartTime = 0.0f;
-		TotalTime = SoundWave->GetDuration();
-		bIsValid = true;
-		FPlatformMisc::MemoryBarrier();
-		if(bAutoStart) Play();
-	}
-	void Init(const FString& MusicPath, UAudioComponent* Audio, bool AutoStart);
-public:
-	UMusicData();
-	static UMusicData* CreateMusicData(const FString& MusicPath, UAudioComponent* Audio, bool AutoStart);
-	void LoadMusic(const FString& MusicPath, bool AutoStart);
-	// Only In Actor::Tick Is Useful!
-	void MusicTick(float DeltaTime);
-	void Play();
-	void Stop();
-	//Use For ReStart Play
-	void ClearState();
-	//Use For LoadMusic 
-	void ClearResource();
-
-	bool IsValid() const { return bIsValid; }
-	bool IsPlaying() const { return bIsPlaying; }
-};
-
 UCLASS()
 class RETURNTOTHEFUTURE_API AMainMusicRadio : public AMainRadio
 {
 	GENERATED_BODY()
 private:
+	EMusicRadioState MusicRadioState;
 	bool bIsValid;
 	FString MusicFolderPath;
 	
@@ -80,12 +26,9 @@ private:
 	uint64_t MusicIndex;
 	
 	UPROPERTY()
-	UMusicData* MusicData;
+	class UMusicData* MusicData;
 public:
 	AMainMusicRadio();
-
-	bool IsValid() const{ return bIsValid && MusicData->IsValid(); }
-	virtual bool IsPlaying() override{ return MusicData->IsPlaying(); }
 
 	void BeginPlay() override;
 	void Tick(float DeltaTime) override;
@@ -110,4 +53,8 @@ public:
 	
 	bool LoadChannels();
 	bool LoadMusicsFromChannel();
+	
+	bool IsValid() const{ return bIsValid; }
+	virtual bool IsPlaying() override;
+	virtual bool IsOpened() override;
 };
