@@ -33,12 +33,15 @@ private:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget", Meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* RadioWidget;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Submix", Meta = (AllowPrivateAccess = "true"))
+	USoundSubmix* Submix;
 public:
 	AMainMusicRadio();
 
 	void BeginPlay() override;
 	void Tick(float DeltaTime) override;
-	
+
+	void UpdataSubmix();
 	void UpdateMusicRadioState(UMusicData* MD);
 
 	void Init(bool bAutoStart) override;

@@ -2,16 +2,21 @@
 
 
 #include "MainMusicRadio.h"
+
+#include "AudioMixerBlueprintLibrary.h"
 #include "RTFInfo.h"
 #include "MusicData.h"
+#include "Components/AudioComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Sound/SoundSubmix.h"
 
 AMainMusicRadio::AMainMusicRadio():
 	bIsOpened(true),
 	MusicRadioState(EMusicRadioState::EMRS_Invalid),
 	ChannelIndex(0),
 	MusicIndex(0),
-	MusicData(nullptr)
+	MusicData(nullptr),
+	Submix(nullptr)
 {
 	MusicFolderPath = FRTFInfo::ResourcePath / "Music";
 	
@@ -24,8 +29,9 @@ void AMainMusicRadio::BeginPlay()
 	Super::BeginPlay();
 	
 	if(!LoadChannels() || !LoadMusicsFromChannel() || !FindChannelOfMusic(true, false)) return;
-	
+
 	MusicData = UMusicData::CreateMusicData(Audio);
+	
 	LoadNewMusic(true);
 }
 
@@ -33,10 +39,16 @@ void AMainMusicRadio::Tick(float DeltaTime)
 {
 	if(IsOpened())
 	{
+		UpdataSubmix();
 		MusicData->MusicTick(DeltaTime);
 		if(MusicData->HasPlayComplete()) AutoNext();
 	}
 	UpdateMusicRadioState(MusicData);
+}
+
+void AMainMusicRadio::UpdataSubmix()
+{
+	Audio->SetSubmixSend(Submix, 0.5f);
 }
 
 void AMainMusicRadio::UpdateMusicRadioState(UMusicData* MD)
