@@ -425,8 +425,8 @@ void ARTFController::OnDownArrowPressed()
 void ARTFController::OnPPressed()
 {
 	AMainMusicRadio* MusicRadio = MainSpaceShip->GetMainMusicRadio();
-	if(MusicRadio->IsPlaying()) MusicRadio->Stop();
-	else MusicRadio->Play();
+	if(MusicRadio->IsPlaying()) MusicRadio->Pause();
+	else if(MusicRadio->IsPaused()) MusicRadio->Play();
 }
 
 void ARTFController::ViewOnTurn(const float InputScale, const float TurnRate, const bool bDeadZone, const float DeadZoneAngle, const float DeadZoneRate, const float MaxAngle)

@@ -4,6 +4,7 @@
 #include "MainMusicRadio.h"
 #include "RTFInfo.h"
 #include "MusicData.h"
+#include "Components/WidgetComponent.h"
 
 AMainMusicRadio::AMainMusicRadio():
 	bIsOpened(true),
@@ -13,6 +14,9 @@ AMainMusicRadio::AMainMusicRadio():
 	MusicData(nullptr)
 {
 	MusicFolderPath = FRTFInfo::ResourcePath / "Music";
+	
+	RadioWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("RadioWidgetComponent"));
+	RadioWidget->SetupAttachment(GetRootComponent());
 }
 
 void AMainMusicRadio::BeginPlay()
@@ -22,30 +26,35 @@ void AMainMusicRadio::BeginPlay()
 	if(!LoadChannels() || !LoadMusicsFromChannel() || !FindChannelOfMusic(true, false)) return;
 	
 	MusicData = UMusicData::CreateMusicData(Audio);
-	
-	MusicData->SetValid(true);
-	PostLoadNewMusic(true);
+	LoadNewMusic(true);
 }
 
 void AMainMusicRadio::Tick(float DeltaTime)
 {
-	MusicData->MusicTick(DeltaTime);
-	if(MusicData->HasComplete()) AutoNext();
+	if(IsOpened())
+	{
+		MusicData->MusicTick(DeltaTime);
+		if(MusicData->HasPlayComplete()) AutoNext();
+	}
 	UpdateMusicRadioState(MusicData);
 }
 
 void AMainMusicRadio::UpdateMusicRadioState(UMusicData* MD)
 {
-	const EMusicDataState MusicDataState = MD->GetMusicDataState();
-	switch(MusicDataState){
-	case EMusicDataState::EMDS_IsPlaying:
+	switch(MD->GetMusicDataState()){
+	case EMusicDataState::EMDS_Playing:
+	case EMusicDataState::EMDS_Stopped:
+	case EMusicDataState::EMDS_PlayComplete:
 		MusicRadioState = EMusicRadioState::EMRS_Playing;
 		break;
-	case EMusicDataState::EMDS_IsStopping:
-		MusicRadioState = EMusicRadioState::EMRS_Stopping;
+	case EMusicDataState::EMDS_Paused:
+	case EMusicDataState::EMDS_LoadComplete:
+		MusicRadioState = EMusicRadioState::EMRS_Paused;
 		break;
-	default:
+	case EMusicDataState::EMDS_Loading:
 		MusicRadioState = EMusicRadioState::EMRS_Loading;
+	default:
+		UE_LOG(LogTemp, Warning, TEXT("MusicDataState: InValid"))
 	}
 }
 
@@ -63,14 +72,15 @@ void AMainMusicRadio::CloseDevice()
 
 void AMainMusicRadio::Play()
 {
-	if(!IsValid() || !CanPlay()) return;
-	MusicData->Play();
+	if(!IsValid()) return;
+	if(MusicData->HasLoadComplete()) MusicData->Play();
+	else MusicData->Pause(false);
 }
 
-void AMainMusicRadio::Stop()
+void AMainMusicRadio::Pause()
 {
-	if(!IsValid() || !CanStop()) return;
-	MusicData->Stop();
+	if(!IsValid()) return;
+	MusicData->Pause(true);
 }
 
 bool AMainMusicRadio::FindChannelOfMusic(bool bOrder, bool bCacheMusicOfChannel){
@@ -117,7 +127,6 @@ void AMainMusicRadio::ModLastChannelModIndex()
 void AMainMusicRadio::ChangeMusic(bool bOrder)
 {
 	if(!IsValid()) return;
-	const bool bAutoStart = PreLoadNewMusic();
 	
 	if(bOrder)
 	{
@@ -136,29 +145,23 @@ void AMainMusicRadio::ChangeMusic(bool bOrder)
 		}
 		MusicIndex = GetLastMusicModIndex();
 	}
-
-	MusicData->SetValid(true);
-	PostLoadNewMusic(bAutoStart);
+	
+	const bool bNewAutoStart = MusicData->IsPlaying();
+	MusicData->Stop();
+	LoadNewMusic(bNewAutoStart);
 }
 
 void AMainMusicRadio::ChangeChannel(bool bOrder)
 {
 	if(!IsValid()) return;
-	const bool bAutoStart = PreLoadNewMusic();
 	FindChannelOfMusic(bOrder, true);
-	MusicData->SetValid(true);
-	PostLoadNewMusic(bAutoStart);
-}
-
-bool AMainMusicRadio::PreLoadNewMusic()
-{
+	
 	const bool bNewAutoStart = MusicData->IsPlaying();
-	Stop();
-	MusicData->ClearResource();
-	return bNewAutoStart;
+	MusicData->Stop();
+	LoadNewMusic(bNewAutoStart);
 }
 
-void AMainMusicRadio::PostLoadNewMusic(bool bAutoStart)
+void AMainMusicRadio::LoadNewMusic(bool bAutoStart)
 {
 	const FString MusicPath = MusicFolderPath / ChannelName[ChannelIndex] / MusicFullName[MusicIndex];
 	MusicData->LoadMusic(MusicPath, bAutoStart);
@@ -167,15 +170,13 @@ void AMainMusicRadio::PostLoadNewMusic(bool bAutoStart)
 void AMainMusicRadio::AutoNext()
 {
 	MusicData->Stop();
-	MusicData->ClearResource();
 	MusicIndex = GetNextMusicModIndex();
 	if(MusicIndex == 0)
 	{
 		MusicOfChannelCache[ChannelIndex] = 0;
 		FindChannelOfMusic(true, false);
 	}
-	MusicData->SetValid(true);
-	PostLoadNewMusic(true);
+	LoadNewMusic(true);
 }
 
 
@@ -195,14 +196,19 @@ bool AMainMusicRadio::LoadMusicsFromChannel()
 	return !MusicFullName.IsEmpty();
 }
 
-bool AMainMusicRadio::IsPlaying()
-{
-	return MusicData->IsPlaying();
-}
-
 bool AMainMusicRadio::IsOpened()
 {
 	return bIsOpened;
+}
+
+bool AMainMusicRadio::IsPlaying()
+{
+	return MusicRadioState == EMusicRadioState::EMRS_Playing;
+}
+
+bool AMainMusicRadio::IsPaused()
+{
+	return MusicRadioState == EMusicRadioState::EMRS_Paused;
 }
 
 EMusicRadioState AMainMusicRadio::GetMusicRadioState() const
@@ -210,21 +216,12 @@ EMusicRadioState AMainMusicRadio::GetMusicRadioState() const
 	return MusicRadioState;
 }
 
-bool AMainMusicRadio::CanStop() const
-{
-	return MusicRadioState == EMusicRadioState::EMRS_Playing;
-}
-
-bool AMainMusicRadio::CanPlay() const
-{
-	return MusicRadioState == EMusicRadioState::EMRS_Stopping;
-}
-
 FMusicRadioInfo AMainMusicRadio::GetMusicRadioInfo() const
 {
 	FMusicRadioInfo Result;
 	Result.bIsOpened = bIsOpened;
 	Result.MusicRadioState = GetMusicRadioState();
+	Result.MusicDataState = MusicData->GetMusicDataState();
 	Result.ChannelName = IsValid()? ChannelName[ChannelIndex]: "Load Fail!";
 	Result.MusicName = IsValid()? MusicFullName[MusicIndex]: "Load Fail!";
 	return std::move(Result);

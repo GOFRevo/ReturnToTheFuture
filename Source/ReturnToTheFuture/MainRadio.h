@@ -18,8 +18,6 @@ class RETURNTOTHEFUTURE_API AMainRadio : public AMainDevice
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", Meta = (AllowPrivateAccess = "true"))
 	UAudioComponent* Audio;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget", Meta = (AllowPrivateAccess = "true"))
-	UWidgetComponent* RadioWidget;
 public:
 	AMainRadio();
 
@@ -27,7 +25,7 @@ public:
 	virtual void OpenDevice() override;
 	virtual void CloseDevice() override;
 	virtual void Play();
-	virtual void Stop();
+	virtual void Pause();
 
 	virtual bool IsPlaying();
 	virtual bool IsOpened();

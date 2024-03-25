@@ -5,10 +5,13 @@
 UENUM(BlueprintType)
 enum class EMusicDataState: uint8
 {
-	EMDS_IsPlaying UMETA(DisplayName = "IsPlaying"),
-	EMDS_IsStopping UMETA(DisplayName = "IsStopping"),
-	EMDS_IsLoading UMETA(DisplayName = "IsLoading"),
-	EMDS_HasComplete UMETA(DisplayName = "HasComplete"),
+	EMDS_InValid UMETA(DisplayName = "Invalid"),
+	EMDS_Playing UMETA(DisplayName = "Playing"),
+	EMDS_Paused UMETA(DisplayName = "Pasued"),
+	EMDS_Stopped UMETA(DisplayName = "Stopped"),
+	EMDS_Loading UMETA(DisplayName = "Loading"),
+	EMDS_LoadComplete UMETA(DisplayName = "LoadComplete"),
+	EMDS_PlayComplete UMETA(DisplayName = "PlayComplete"),
 
 	EMDS_MAX UMETA(DisplayName = "DefaultMax")
 };
@@ -18,7 +21,7 @@ enum class EMusicRadioState: uint8
 {
 	EMRS_Invalid UMETA(DisplayName = "Invalid"),
 	EMRS_Playing UMETA(DisplayName = "Playing"),
-	EMRS_Stopping UMETA(DisplayName = "Stopping"),
+	EMRS_Paused UMETA(DisplayName = "Paused"),
 	EMRS_Loading UMETA(DisplayName = "Loading"),
 
 	EMRS_MAX UMETA(DisplayName = "DefaultMax")

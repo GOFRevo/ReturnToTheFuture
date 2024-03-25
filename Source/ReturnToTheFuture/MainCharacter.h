@@ -50,7 +50,7 @@ public:
 	FTransform GetIFPivotTargetTransform() const;
 	void ChangeMusicRadioChannel(AMainMusicRadio* MusicRadio, bool bOrder);
 	void ChangeMusicRadioMusic(AMainMusicRadio* MusicRadio, bool bOrder);
-	void StopRadio(AMainRadio* Radio);
+	void PauseRadio(AMainRadio* Radio);
 	void PlayRadio(AMainRadio* Radio);
 
 	bool IsOnSpaceShip() const;

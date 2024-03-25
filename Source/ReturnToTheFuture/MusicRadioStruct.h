@@ -14,6 +14,8 @@ struct FMusicRadioInfo: public FTableRowBase
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EMusicRadioState MusicRadioState = EMusicRadioState::EMRS_Invalid;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	EMusicDataState MusicDataState = EMusicDataState::EMDS_InValid;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString ChannelName;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString MusicName;

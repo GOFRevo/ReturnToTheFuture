@@ -17,7 +17,6 @@ void DebugInfoOfSoundWave(USoundWave* SoundWave)
 #endif
 
 USoundWave* FRTFLoader::LoadSoundWaveFromFile(const FString& FilePath){
-	/*
 	USoundWaveProcedural* NewSoundWave = NewObject<USoundWaveProcedural>();
 	if (NewSoundWave == nullptr) return nullptr;
 	
@@ -36,8 +35,6 @@ USoundWave* FRTFLoader::LoadSoundWaveFromFile(const FString& FilePath){
 	NewSoundWave->SetSoundAssetCompressionType(ESoundAssetCompressionType::PCM);
 	NewSoundWave->PostImport();
 	return NewSoundWave;
-	*/
-	return nullptr;
 
 	
 }

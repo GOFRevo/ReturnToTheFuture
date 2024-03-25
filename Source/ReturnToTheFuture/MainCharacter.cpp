@@ -115,9 +115,9 @@ void AMainCharacter::ChangeMusicRadioMusic(AMainMusicRadio* MusicRadio, bool bOr
 	MusicRadio->ChangeMusic(bOrder);
 }
 
-void AMainCharacter::StopRadio(AMainRadio* Radio)
+void AMainCharacter::PauseRadio(AMainRadio* Radio)
 {
-	Radio->Stop();
+	Radio->Pause();
 }
 
 void AMainCharacter::PlayRadio(AMainRadio* Radio)

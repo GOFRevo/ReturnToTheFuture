@@ -1,110 +1,118 @@
 ﻿#include "MusicData.h"
+#include "RTFLoader.h"
 #include "Components/AudioComponent.h"
 
 UMusicData::UMusicData():
-	RuntimeImporter(nullptr),
 	AudioComp(nullptr),
 	SoundWave(nullptr),
-	MusicDataState(EMusicDataState::EMDS_IsLoading),
-	bAutoStart(false),
-	bIsValid(false),
+	MusicDataState(EMusicDataState::EMDS_InValid),
 	StartTime(0.0f),
 	TotalTime(0.0f)
 {}
 
-void UMusicData::Init(UAudioComponent* Audio)
-{
-	check(Audio != nullptr)
-	AudioComp = Audio;
-	RuntimeImporter = URuntimeAudioImporterLibrary::CreateRuntimeAudioImporter();
-	RuntimeImporter->OnResult.AddDynamic(this, &UMusicData::OnLoadResult);
-	OnMetaResultDelegate.BindDynamic(this, &UMusicData::OnMetaResult);
-}
-
 UMusicData* UMusicData::CreateMusicData(UAudioComponent* Audio)
 {
 	UMusicData* Result = NewObject<UMusicData>();
-	Result->Init(Audio);
+	Result->AudioComp = Audio;
 	return Result;
 }
 
 void UMusicData::LoadMusic(const FString& MusicPath, bool AutoStart)
 {
-	MusicDataState = EMusicDataState::EMDS_IsLoading;
-	bAutoStart = AutoStart;
-	RuntimeImporter->ImportAudioFromFile(MusicPath, ERuntimeAudioFormat::Auto);
+	if(!CanLoad()) return;
+	MusicDataState = EMusicDataState::EMDS_Loading;
+	Clear();
+	SoundWave = FRTFLoader::LoadSoundWaveFromFile(MusicPath);
+	if(SoundWave == nullptr)
+	{
+		MusicDataState = EMusicDataState::EMDS_InValid;
+	}
+	else
+	{
+		TotalTime = SoundWave->GetDuration();
+		MusicDataState = EMusicDataState::EMDS_LoadComplete;
+		if(AutoStart) Play();
+	}
 }
 
 void UMusicData::MusicTick(float DeltaTime)
 {
-	if(MusicDataState == EMusicDataState::EMDS_IsPlaying)
+	if(MusicDataState == EMusicDataState::EMDS_Playing)
 	{
 		StartTime += DeltaTime;
-		if(StartTime >= TotalTime) MusicDataState = EMusicDataState::EMDS_HasComplete;
+		if(StartTime >= TotalTime) MusicDataState = EMusicDataState::EMDS_PlayComplete;
 	}
 }
 
+void UMusicData::Pause(bool bShouldPause)
+{
+	if(!CanPause(bShouldPause)) return;
+	AudioComp->SetPaused(bShouldPause);
+	if(bShouldPause) MusicDataState = EMusicDataState::EMDS_Paused;
+	else MusicDataState = EMusicDataState::EMDS_Playing;
+}
+
 void UMusicData::Play(){
-	if(MusicDataState != EMusicDataState::EMDS_IsStopping) return;
-	AudioComp->SetFloatParameter(TEXT("StartTime"), StartTime);
+	if(MusicDataState != EMusicDataState::EMDS_LoadComplete) return;
 	AudioComp->SetWaveParameter(TEXT("Music"), SoundWave);
 	AudioComp->Play();
-	MusicDataState = EMusicDataState::EMDS_IsPlaying;
+	AudioComp->SetPaused(false);
+	MusicDataState = EMusicDataState::EMDS_Playing;
 }
 
 void UMusicData::Stop()
 {
 	if(!CanStop()) return;
 	AudioComp->Stop();
-	MusicDataState = EMusicDataState::EMDS_IsStopping;
+	MusicDataState = EMusicDataState::EMDS_Stopped;
 }
 
-void UMusicData::ClearState()
-{
-	StartTime = 0.0f;
-	MusicDataState = EMusicDataState::EMDS_IsStopping;
-}
-
-void UMusicData::ClearResource()
+void UMusicData::Clear()
 {
 	SoundWave = nullptr;
-	bIsValid = false;
-	bAutoStart = false;
 	StartTime = 0.0f;
 	TotalTime = 0.0f;
-	MusicDataState = EMusicDataState::EMDS_IsLoading;
-}
-
-void UMusicData::SetValid(bool IsValid)
-{
-	bIsValid = IsValid;
-}
-
-bool UMusicData::IsValid() const
-{
-	return bIsValid;
 }
 
 bool UMusicData::IsPlaying() const
 {
-	return MusicDataState == EMusicDataState::EMDS_IsPlaying;
+	return MusicDataState == EMusicDataState::EMDS_Playing;
 }
 
-bool UMusicData::HasComplete() const
+bool UMusicData::IsPaused() const
 {
-	return MusicDataState == EMusicDataState::EMDS_HasComplete;
+	return MusicDataState == EMusicDataState::EMDS_Paused;
+}
+
+bool UMusicData::HasPlayComplete() const
+{
+	return MusicDataState == EMusicDataState::EMDS_PlayComplete;
+}
+
+bool UMusicData::HasLoadComplete() const
+{
+	return MusicDataState == EMusicDataState::EMDS_LoadComplete;
+}
+
+bool UMusicData::CanPause(bool bShouldPause) const
+{
+	if(bShouldPause) return MusicDataState == EMusicDataState::EMDS_Playing;
+	return MusicDataState == EMusicDataState::EMDS_Paused;
 }
 
 bool UMusicData::CanStop() const
 {
-	return MusicDataState == EMusicDataState::EMDS_IsPlaying ||
-		MusicDataState == EMusicDataState::EMDS_HasComplete;
+	return MusicDataState != EMusicDataState::EMDS_InValid &&
+		MusicDataState != EMusicDataState::EMDS_Stopped &&
+		MusicDataState != EMusicDataState::EMDS_Loading;
+}
+
+bool UMusicData::CanLoad() const
+{
+	return MusicDataState == EMusicDataState::EMDS_InValid || MusicDataState == EMusicDataState::EMDS_Stopped;
 }
 
 EMusicDataState UMusicData::GetMusicDataState() const
 {
 	return MusicDataState;
 }
-
-
-

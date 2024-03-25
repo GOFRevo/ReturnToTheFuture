@@ -30,6 +30,9 @@ private:
 	
 	UPROPERTY()
 	UMusicData* MusicData;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget", Meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* RadioWidget;
 public:
 	AMainMusicRadio();
 
@@ -43,7 +46,7 @@ public:
 	void CloseDevice() override;
 	
 	void Play() override;
-	void Stop() override;
+	void Pause() override;
 	
 	bool FindChannelOfMusic(bool bOrder, bool bChangeSongIndex);
 	uint64_t GetNextMusicModIndex() const;
@@ -53,19 +56,17 @@ public:
 	
 	void ChangeMusic(bool bOrder);
 	void ChangeChannel(bool bOrder);
-	bool PreLoadNewMusic();
-	void PostLoadNewMusic(bool bAutoStart);
+	void LoadNewMusic(bool bAutoStart);
 	void AutoNext();
 	
 	bool LoadChannels();
 	bool LoadMusicsFromChannel();
 	
 	bool IsValid() const{ return MusicRadioState != EMusicRadioState::EMRS_Invalid; }
-	virtual bool IsPlaying() override;
 	virtual bool IsOpened() override;
+	virtual bool IsPlaying() override;
+	bool IsPaused();
 	EMusicRadioState GetMusicRadioState() const;
-	bool CanStop() const;
-	bool CanPlay() const;
 	UFUNCTION(BlueprintCallable)
 	FMusicRadioInfo GetMusicRadioInfo() const;
 };
