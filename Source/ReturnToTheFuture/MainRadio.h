@@ -9,6 +9,7 @@
 /**
  * 
  */
+class UWidgetComponent;
 UCLASS()
 class RETURNTOTHEFUTURE_API AMainRadio : public AMainDevice
 {
@@ -17,6 +18,8 @@ class RETURNTOTHEFUTURE_API AMainRadio : public AMainDevice
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", Meta = (AllowPrivateAccess = "true"))
 	UAudioComponent* Audio;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget", Meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* RadioWidget;
 public:
 	AMainRadio();
 

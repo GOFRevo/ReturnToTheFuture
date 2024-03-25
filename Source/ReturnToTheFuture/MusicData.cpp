@@ -101,4 +101,10 @@ bool UMusicData::CanStop() const
 		MusicDataState == EMusicDataState::EMDS_HasComplete;
 }
 
+EMusicDataState UMusicData::GetMusicDataState() const
+{
+	return MusicDataState;
+}
+
+
 

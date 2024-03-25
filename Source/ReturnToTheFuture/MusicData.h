@@ -60,4 +60,5 @@ public:
 	bool IsPlaying() const;
 	bool HasComplete() const;
 	bool CanStop() const;
+	EMusicDataState GetMusicDataState() const;
 };

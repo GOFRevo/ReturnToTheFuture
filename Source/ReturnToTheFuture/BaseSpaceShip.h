@@ -15,7 +15,7 @@ protected:
 	// class USkeletalMeshComponent* Mesh;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpaceShip Properties", Meta = (AllowPrivateAccess = "true"))
-	class UStaticMeshComponent* Mesh;
+	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Properties", Meta = (AllowPrivateAccess = "true"))
 	float Quality;

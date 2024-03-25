@@ -12,11 +12,14 @@ enum class EMusicDataState: uint8
 
 	EMDS_MAX UMETA(DisplayName = "DefaultMax")
 };
+
 UENUM(BlueprintType)
 enum class EMusicRadioState: uint8
 {
-	EMRS_Opened UMETA(DisplayName = "Opened"),
-	EMRS_Closed UMETA(DisplayName = "Closed"),
+	EMRS_Invalid UMETA(DisplayName = "Invalid"),
+	EMRS_Playing UMETA(DisplayName = "Playing"),
+	EMRS_Stopping UMETA(DisplayName = "Stopping"),
+	EMRS_Loading UMETA(DisplayName = "Loading"),
 
 	EMRS_MAX UMETA(DisplayName = "DefaultMax")
 };

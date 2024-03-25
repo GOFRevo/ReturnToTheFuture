@@ -5,17 +5,20 @@
 #include "CoreMinimal.h"
 #include "MainRadio.h"
 #include "MusicRadioEnums.h"
+#include "MusicRadioStruct.h"
 #include "MainMusicRadio.generated.h"
 /**
  * 
  */
+class UMusicData;
+class UWidgetComponent;
 UCLASS()
 class RETURNTOTHEFUTURE_API AMainMusicRadio : public AMainRadio
 {
 	GENERATED_BODY()
 private:
+	bool bIsOpened;
 	EMusicRadioState MusicRadioState;
-	bool bIsValid;
 	FString MusicFolderPath;
 	
 	TArray<FString> ChannelName;
@@ -26,12 +29,14 @@ private:
 	uint64_t MusicIndex;
 	
 	UPROPERTY()
-	class UMusicData* MusicData;
+	UMusicData* MusicData;
 public:
 	AMainMusicRadio();
 
 	void BeginPlay() override;
 	void Tick(float DeltaTime) override;
+	
+	void UpdateMusicRadioState(UMusicData* MD);
 
 	void Init(bool bAutoStart) override;
 	void OpenDevice() override;
@@ -50,11 +55,17 @@ public:
 	void ChangeChannel(bool bOrder);
 	bool PreLoadNewMusic();
 	void PostLoadNewMusic(bool bAutoStart);
+	void AutoNext();
 	
 	bool LoadChannels();
 	bool LoadMusicsFromChannel();
 	
-	bool IsValid() const{ return bIsValid; }
+	bool IsValid() const{ return MusicRadioState != EMusicRadioState::EMRS_Invalid; }
 	virtual bool IsPlaying() override;
 	virtual bool IsOpened() override;
+	EMusicRadioState GetMusicRadioState() const;
+	bool CanStop() const;
+	bool CanPlay() const;
+	UFUNCTION(BlueprintCallable)
+	FMusicRadioInfo GetMusicRadioInfo() const;
 };

@@ -3,11 +3,14 @@
 
 #include "MainRadio.h"
 #include "Components/AudioComponent.h"
+#include "Components/WidgetComponent.h"
 
 AMainRadio::AMainRadio()
 {
 	Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
 	SetRootComponent(Audio);
+	RadioWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("RadioWidgetComponent"));
+	RadioWidget->SetupAttachment(GetRootComponent());
 }
 
 void AMainRadio::Init(bool bAutoStart)
