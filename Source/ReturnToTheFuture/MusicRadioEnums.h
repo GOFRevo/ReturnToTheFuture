@@ -19,6 +19,8 @@ enum class EMusicDataState: uint8
 UENUM(BlueprintType)
 enum class EMusicRadioState: uint8
 {
+	// Use For Beginplay
+	EMRS_Valid UMETA(DisplayName = "Valid"),
 	EMRS_Invalid UMETA(DisplayName = "Invalid"),
 	EMRS_Playing UMETA(DisplayName = "Playing"),
 	EMRS_Paused UMETA(DisplayName = "Paused"),

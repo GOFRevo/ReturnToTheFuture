@@ -3,7 +3,6 @@
 
 #include "MainMusicRadio.h"
 
-#include "AudioMixerBlueprintLibrary.h"
 #include "RTFInfo.h"
 #include "MusicData.h"
 #include "Components/AudioComponent.h"
@@ -19,6 +18,8 @@ AMainMusicRadio::AMainMusicRadio():
 	Submix(nullptr)
 {
 	MusicFolderPath = FRTFInfo::ResourcePath / "Music";
+	ChannelNameText = FRTFInfo::InvalidText;
+	MusicNameText = FRTFInfo::InvalidText;
 	
 	RadioWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("RadioWidgetComponent"));
 	RadioWidget->SetupAttachment(GetRootComponent());
@@ -29,9 +30,10 @@ void AMainMusicRadio::BeginPlay()
 	Super::BeginPlay();
 	
 	if(!LoadChannels() || !LoadMusicsFromChannel() || !FindChannelOfMusic(true, false)) return;
+	MusicRadioState = EMusicRadioState::EMRS_Valid;
 
 	MusicData = UMusicData::CreateMusicData(Audio);
-	
+
 	LoadNewMusic(true);
 }
 
@@ -44,6 +46,7 @@ void AMainMusicRadio::Tick(float DeltaTime)
 		if(MusicData->HasPlayComplete()) AutoNext();
 	}
 	UpdateMusicRadioState(MusicData);
+	RefreshMusicRadioInfo();
 }
 
 void AMainMusicRadio::UpdataSubmix()
@@ -66,7 +69,7 @@ void AMainMusicRadio::UpdateMusicRadioState(UMusicData* MD)
 	case EMusicDataState::EMDS_Loading:
 		MusicRadioState = EMusicRadioState::EMRS_Loading;
 	default:
-		UE_LOG(LogTemp, Warning, TEXT("MusicDataState: InValid"))
+		MusicRadioState = EMusicRadioState::EMRS_Invalid;
 	}
 }
 
@@ -96,7 +99,7 @@ void AMainMusicRadio::Pause()
 }
 
 bool AMainMusicRadio::FindChannelOfMusic(bool bOrder, bool bCacheMusicOfChannel){
-	if(ChannelName.Num() == 1) return !MusicFullName.IsEmpty();
+	if(ChannelName.Num() == 1) return !MusicName.IsEmpty();
 	const uint64_t OldChannelIndex = ChannelIndex;
 	while(true)
 	{
@@ -118,12 +121,12 @@ bool AMainMusicRadio::FindChannelOfMusic(bool bOrder, bool bCacheMusicOfChannel)
 
 uint64_t AMainMusicRadio::GetNextMusicModIndex() const
 {
-	return (MusicIndex + 1) % MusicFullName.Num();
+	return (MusicIndex + 1) % MusicName.Num();
 }
 
 uint64_t AMainMusicRadio::GetLastMusicModIndex() const
 {
-	return MusicIndex == 0? MusicFullName.Num() - 1: MusicIndex - 1;
+	return MusicIndex == 0? MusicName.Num() - 1: MusicIndex - 1;
 }
 
 void AMainMusicRadio::ModNextChannelModIndex()
@@ -175,8 +178,10 @@ void AMainMusicRadio::ChangeChannel(bool bOrder)
 
 void AMainMusicRadio::LoadNewMusic(bool bAutoStart)
 {
-	const FString MusicPath = MusicFolderPath / ChannelName[ChannelIndex] / MusicFullName[MusicIndex];
+	const FString MusicPath = MusicFolderPath / ChannelName[ChannelIndex] / MusicName[MusicIndex];
 	MusicData->LoadMusic(MusicPath, bAutoStart);
+	ChangeChannelNameText();
+	ChangeMusicNameText();
 }
 
 void AMainMusicRadio::AutoNext()
@@ -191,6 +196,29 @@ void AMainMusicRadio::AutoNext()
 	LoadNewMusic(true);
 }
 
+void AMainMusicRadio::RefreshMusicRadioInfo()
+{
+	MusicRadioInfo.bIsOpened = bIsOpened;
+	MusicRadioInfo.MusicRadioState = GetMusicRadioState();
+	MusicRadioInfo.ChannelName = GetChannleNameText();
+	MusicRadioInfo.MusicName = GetMusicNameText();
+}
+
+void AMainMusicRadio::ChangeChannelNameText()
+{
+	ChannelNameText = IsValid()? FText::FromString(ChannelName[ChannelIndex]): FRTFInfo::InvalidText;
+}
+
+void AMainMusicRadio::ChangeMusicNameText()
+{
+	if(!IsValid())
+	{
+		MusicNameText = FRTFInfo::InvalidText;
+		return;
+	}
+	const FString& Result = MusicData->GetMusicName();
+	MusicNameText = FText::FromString(Result.IsEmpty()? MusicName[MusicIndex]: Result);
+}
 
 bool AMainMusicRadio::LoadChannels()
 {
@@ -203,9 +231,10 @@ bool AMainMusicRadio::LoadChannels()
 bool AMainMusicRadio::LoadMusicsFromChannel()
 {
 	IFileManager& FileManager = IFileManager::Get();
-	MusicFullName.Empty();
-	FileManager.FindFiles(MusicFullName, *(MusicFolderPath / ChannelName[ChannelIndex] / "*.wav"), true, false);
-	return !MusicFullName.IsEmpty();
+	MusicName.Empty();
+	FileManager.FindFiles(MusicName, *(MusicFolderPath / ChannelName[ChannelIndex] / "*.wav"), true, false);
+	for(FString& MusicFullName: MusicName) check(MusicFullName.RemoveFromEnd(".wav"))
+	return !MusicName.IsEmpty();
 }
 
 bool AMainMusicRadio::IsOpened()
@@ -228,14 +257,38 @@ EMusicRadioState AMainMusicRadio::GetMusicRadioState() const
 	return MusicRadioState;
 }
 
-FMusicRadioInfo AMainMusicRadio::GetMusicRadioInfo() const
+const FMusicRadioInfo& AMainMusicRadio::GetMusicRadioInfo() const
 {
-	FMusicRadioInfo Result;
-	Result.bIsOpened = bIsOpened;
-	Result.MusicRadioState = GetMusicRadioState();
-	Result.MusicDataState = MusicData->GetMusicDataState();
-	Result.ChannelName = IsValid()? ChannelName[ChannelIndex]: "Load Fail!";
-	Result.MusicName = IsValid()? MusicFullName[MusicIndex]: "Load Fail!";
-	return std::move(Result);
-	
+	return MusicRadioInfo;
 }
+
+FText AMainMusicRadio::GetChannleNameText() const
+{
+	return ChannelNameText;
+}
+
+FText AMainMusicRadio::GetMusicNameText() const
+{
+	return MusicNameText;
+}
+
+UMusicTimeLine* AMainMusicRadio::GetMusicTimeLine()
+{
+	return MusicData->GetMusicTimeLine();
+}
+
+bool AMainMusicRadio::IsFirstTimeLine() const
+{
+	return MusicData->IsFirstTimeLine();
+}
+
+bool AMainMusicRadio::CanGetMusicTimeLine() const
+{
+	return MusicData->CanGetMusicTimeLine();
+}
+
+float AMainMusicRadio::GetMusicStartTime() const
+{
+	return MusicData->GetMusicStartTime();
+}
+

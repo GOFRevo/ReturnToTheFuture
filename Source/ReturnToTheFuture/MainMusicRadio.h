@@ -20,17 +20,23 @@ private:
 	bool bIsOpened;
 	EMusicRadioState MusicRadioState;
 	FString MusicFolderPath;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MusicRadioInfo", Meta = (AllowPrivateAccess = "true"))
+	FText ChannelNameText;
 	TArray<FString> ChannelName;
 	TArray<uint64_t> MusicOfChannelCache;
 	uint64_t ChannelIndex;
 	
-	TArray<FString> MusicFullName;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MusicRadioInfo", Meta = (AllowPrivateAccess = "true"))
+	FText MusicNameText;
+	TArray<FString> MusicName;
 	uint64_t MusicIndex;
 	
 	UPROPERTY()
 	UMusicData* MusicData;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MusicRadioInfo", Meta = (AllowpRivateAccess = "true"))
+	FMusicRadioInfo MusicRadioInfo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget", Meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* RadioWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Submix", Meta = (AllowPrivateAccess = "true"))
@@ -61,6 +67,9 @@ public:
 	void ChangeChannel(bool bOrder);
 	void LoadNewMusic(bool bAutoStart);
 	void AutoNext();
+	void RefreshMusicRadioInfo();
+	void ChangeChannelNameText();
+	void ChangeMusicNameText();
 	
 	bool LoadChannels();
 	bool LoadMusicsFromChannel();
@@ -71,5 +80,15 @@ public:
 	bool IsPaused();
 	EMusicRadioState GetMusicRadioState() const;
 	UFUNCTION(BlueprintCallable)
-	FMusicRadioInfo GetMusicRadioInfo() const;
+	const FMusicRadioInfo& GetMusicRadioInfo() const;
+	FText GetChannleNameText() const;
+	FText GetMusicNameText() const;
+	UFUNCTION(BlueprintCallable)
+	UMusicTimeLine* GetMusicTimeLine();
+	UFUNCTION(BlueprintCallable)
+	bool IsFirstTimeLine() const;
+	UFUNCTION(BlueprintCallable)
+	bool CanGetMusicTimeLine() const;
+	UFUNCTION(BlueprintCallable)
+	float GetMusicStartTime() const;
 };

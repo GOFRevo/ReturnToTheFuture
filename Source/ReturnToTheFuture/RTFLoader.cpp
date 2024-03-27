@@ -1,5 +1,7 @@
 ﻿#include "RTFLoader.h"
 #include "RTFMacro.h"
+#include "MusicRadioStruct.h"
+#include "LRCParse.h"
 #include "Sound/SoundWaveProcedural.h"
 
 #ifdef RTF_DEBUG
@@ -7,11 +9,10 @@ void DebugInfoOfSoundWave(USoundWave* SoundWave)
 {
 	if(SoundWave == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SoundWave: SoundWave Pointer Is Null!"))
+		// UE_LOG(LogTemp, Warning, TEXT("SoundWave: SoundWave Pointer Is Null!"))
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("SoundWave: Duration - %f"), SoundWave->GetDuration());
-	UE_LOG(LogTemp, Warning, TEXT("SoundWave: Channel Num - %d"), SoundWave->NumChannels);
 	UE_LOG(LogTemp, Warning, TEXT("SoundWave: RawPCMDataSize - %d"), SoundWave->RawPCMDataSize);
 }
 #endif
@@ -35,6 +36,15 @@ USoundWave* FRTFLoader::LoadSoundWaveFromFile(const FString& FilePath){
 	NewSoundWave->SetSoundAssetCompressionType(ESoundAssetCompressionType::PCM);
 	NewSoundWave->PostImport();
 	return NewSoundWave;
+}
 
-	
+UMusicLRC* FRTFLoader::LoadMusicLRCFromFile(const FString& FilePath)
+{
+	UMusicLRC* NewLRC = NewObject<UMusicLRC>();
+	if(NewLRC == nullptr) return nullptr;
+	if(!FFileHelper::LoadFileToString(NewLRC->Lyric, *FilePath)) return nullptr;
+	NewLRC->MusicName = FLRCParse::ParseMusicNameFromString(NewLRC->Lyric, NewLRC->Index);
+	NewLRC->AuthorName = FLRCParse::ParseAuthorNameFromString(NewLRC->Lyric, NewLRC->Index);
+	if(!NewLRC->MusicName.IsEmpty()) NewLRC->MusicName += " - " + NewLRC->AuthorName;
+	return NewLRC;
 }

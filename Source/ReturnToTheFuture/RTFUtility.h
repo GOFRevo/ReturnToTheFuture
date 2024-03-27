@@ -9,4 +9,5 @@ public:
 	static bool Prob(const float Prob);
 	static bool IsSameMark(const float Lhs, const float Rhs);
 	static float GetDirection(const float Num);
+	static bool IsDigit(TCHAR Char);
 };
